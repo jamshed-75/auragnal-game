@@ -1,82 +1,90 @@
+/* Reset & base */
 * {
+  margin: 0;
+  padding: 0;
   box-sizing: border-box;
-  margin: 0; padding: 0;
 }
 
-body {
+body, html {
+  width: 100%;
+  height: 100%;
   font-family: 'Cinzel Decorative', cursive;
   background-color: #000;
-  color: #fff;
+  color: gold;
   overflow: hidden;
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
 }
 
 #game-container {
   position: relative;
-  width: 100%;
-  max-width: 1440px;
-  aspect-ratio: 16 / 9;
-  margin: auto;
+  width: 100vw;
+  height: 100vh;
+  max-width: 480px;
+  max-height: 720px;
   border: 4px solid gold;
-  background-image: url('assets/images/bg.jpg');
-  background-size: cover;
-  background-position: center;
-  overflow: hidden;
+  background-color: black;
+  box-shadow: 0 0 15px gold;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
 }
 
 #game-title {
-  position: absolute;
-  top: 10%;
-  width: 100%;
+  margin: 15px 0 5px 0;
+  font-size: 2rem;
   text-align: center;
-  font-size: 2.5rem;
-  color: gold;
-  text-shadow: 0 0 12px rgba(255, 215, 0, 0.6);
-  z-index: 10;
-  pointer-events: none;
+  user-select: none;
 }
 
-canvas#gameCanvas {
-  width: 100%;
-  height: 100%;
+#gameCanvas {
+  background: black;
   display: block;
-  position: absolute;
-  top: 0; left: 0;
-  z-index: 1;
-  background: transparent;
+  width: 100%;
+  height: calc(100% - 120px);
+  border-bottom: 4px solid gold;
 }
 
-#startBtn,
-#lets-shop {
-  position: absolute;
-  padding: 12px 22px;
-  font-size: 1rem;
+#buttons {
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+  margin: 10px 0 20px 0;
+}
+
+button {
   background-color: gold;
-  color: #000;
   border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  z-index: 10;
+  padding: 12px 25px;
   font-weight: bold;
+  font-family: 'Cinzel Decorative', cursive;
+  font-size: 1.1rem;
+  cursor: pointer;
+  border-radius: 6px;
   box-shadow: 0 0 10px gold;
-  transition: transform 0.2s ease;
+  transition: background-color 0.3s ease;
 }
 
-#startBtn:hover,
-#lets-shop:hover {
-  transform: scale(1.05);
+button:hover {
+  background-color: #b8860b;
+  color: #000;
 }
 
-#startBtn {
-  bottom: 80px;
-  left: 50%;
-  transform: translateX(-50%);
-}
+@media (max-width: 500px) {
+  #game-container {
+    max-width: 100vw;
+    max-height: 100vh;
+    border-width: 3px;
+  }
 
-#lets-shop {
-  bottom: 20px;
-  right: 30px;
+  #game-title {
+    font-size: 1.5rem;
+  }
+
+  button {
+    padding: 10px 20px;
+    font-size: 1rem;
+  }
 }
