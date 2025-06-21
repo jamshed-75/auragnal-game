@@ -8,20 +8,10 @@
 </head>
 <body>
   <div id="game-container">
-    <h1 id="welcome-text">Welcome Mystery Shopper</h1>
-
-    <canvas id="game-canvas" width="1440" height="1080" tabindex="0"></canvas>
-
-    <div id="ui-container">
-      <button id="start-btn">Start Game</button>
-      <button id="shop-btn">Let's Shop Instead</button>
-      <div id="score-display">Score: 0</div>
-      <div id="game-over" class="hidden">
-        <h2>Game Over</h2>
-        <p>Your final score: <span id="final-score">0</span></p>
-        <button id="restart-btn">Play Again</button>
-      </div>
-    </div>
+    <h1 id="game-title">Welcome Mystery Shopper</h1>
+    <canvas id="gameCanvas"></canvas>
+    <button id="startBtn">Start Game</button>
+    <button id="lets-shop" onclick="window.location.href='https://auragnal.com'">Let’s Shop Instead</button>
   </div>
 
   <script src="game.js"></script>
