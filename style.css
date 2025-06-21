@@ -1,0 +1,63 @@
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #000;
+  font-family: 'Segoe UI', sans-serif;
+  overflow: hidden;
+}
+
+.game-wrapper {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.game-container {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+canvas {
+  border: 4px solid gold;
+  box-shadow: 0 0 25px gold;
+  background-color: #111;
+  max-width: 100%;
+  height: auto;
+}
+
+.game-title {
+  color: white;
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+  text-shadow: 0 0 8px gold;
+}
+
+.game-buttons {
+  margin-top: 20px;
+  display: flex;
+  gap: 20px;
+}
+
+#startBtn,
+#shopBtn {
+  background-color: #222;
+  color: gold;
+  border: 2px solid gold;
+  padding: 12px 24px;
+  font-size: 1rem;
+  cursor: pointer;
+  border-radius: 12px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+#startBtn:hover,
+#shopBtn:hover {
+  background-color: gold;
+  color: #111;
+}
