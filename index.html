@@ -2,19 +2,27 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>AURAGNAL Game - Play & Shop</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cormorant+Garamond:wght@600&display=swap" rel="stylesheet" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AURAGNAL Game</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div id="game-container">
-    <canvas id="gameCanvas" width="1440" height="1080"></canvas>
-    <div id="ui-buttons">
+    <h1 class="title">Welcome Mystery Shopper</h1>
+    <canvas id="gameCanvas" width="1440" height="810"></canvas>
+    <div class="buttons">
       <button id="startBtn">Start Game</button>
-      <button id="shopBtn">Let's Shop Instead</button>
+      <a id="shopBtn" href="https://auragnal.com">Let's Shop Instead</a>
     </div>
   </div>
+
+  <audio id="bgMusic" loop>
+    <source src="assets/sounds/game.wav" type="audio/wav" />
+  </audio>
+  <audio id="jumpSound" src="assets/sounds/jump.wav"></audio>
+  <audio id="collectSound" src="assets/sounds/collect.ogg"></audio>
+  <audio id="deathSound" src="assets/sounds/death.wav"></audio>
+  <audio id="startSound" src="assets/sounds/start.mp3"></audio>
 
   <script src="game.js"></script>
 </body>
