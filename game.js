@@ -29,18 +29,36 @@ const sounds = {
 };
 sounds.game.loop = true;
 
-// Player Animations using spritesheets of 32 frames width:64 height:64 each frame
+// Player Animations using individual PNG frames (1.png - 32.png)
 class Animation {
-  constructor(imageSrc) {
-    this.image = new Image();
-    this.image.src = imageSrc;
-    this.frameWidth = 64;
-    this.frameHeight = 64;
+  constructor(folderPath) {
+    this.frames = [];
     this.frameCount = 32;
     this.currentFrame = 0;
     this.frameSpeed = 4;
     this.frameTimer = 0;
+    this.frameWidth = 64;
+    this.frameHeight = 64;
+    this.scale = 2;
+    this.loaded = false;
+    this.loadFrames(folderPath);
   }
+
+  loadFrames(folderPath) {
+    let loadedCount = 0;
+    for (let i = 1; i <= this.frameCount; i++) {
+      const img = new Image();
+      img.src = `${folderPath}/${i}.png`;
+      img.onload = () => {
+        loadedCount++;
+        if (loadedCount === this.frameCount) {
+          this.loaded = true;
+        }
+      };
+      this.frames.push(img);
+    }
+  }
+
   update() {
     this.frameTimer++;
     if (this.frameTimer >= this.frameSpeed) {
@@ -48,27 +66,26 @@ class Animation {
       this.frameTimer = 0;
     }
   }
-  draw(ctx, x, y, scale = 2) {
+
+  draw(ctx, x, y) {
+    if (!this.loaded) return; // wait for images to load
+    const img = this.frames[this.currentFrame];
     ctx.drawImage(
-      this.image,
-      this.currentFrame * this.frameWidth,
-      0,
-      this.frameWidth,
-      this.frameHeight,
+      img,
       x,
       y,
-      this.frameWidth * scale,
-      this.frameHeight * scale
+      this.frameWidth * this.scale,
+      this.frameHeight * this.scale
     );
   }
 }
 
-// Load all player animations
+// Load player animations with folder paths
 const playerAnimations = {
-  idle: new Animation("assets/player/idle/sprite.png"),
-  run: new Animation("assets/player/run/sprite.png"),
-  jump: new Animation("assets/player/jump/sprite.png"),
-  death: new Animation("assets/player/death/sprite.png"),
+  idle: new Animation("assets/player/idle"),
+  run: new Animation("assets/player/run"),
+  jump: new Animation("assets/player/jump"),
+  death: new Animation("assets/player/death"),
 };
 
 class Player {
@@ -140,16 +157,16 @@ class GameObject {
 const player = new Player();
 
 const collectibleImages = [
-  "assets/images/dress/1.png",
-  "assets/images/heels/1.png",
-  "assets/images/handbag/1.png",
-  "assets/images/earings/1.png",
+  "assets/images/dress.png",
+  "assets/images/heels.png",
+  "assets/images/handbag.png",
+  "assets/images/earings.png",
 ];
 
 const obstacleImages = [
-  "assets/images/obstacle_cart/1.png",
-  "assets/images/obstacle_bag/1.png",
-  "assets/images/obstacle_hanger/1.png",
+  "assets/images/obstacle_cart.png",
+  "assets/images/obstacle_bag.png",
+  "assets/images/obstacle_hanger.png",
 ];
 
 let collectibles = [];
@@ -215,6 +232,11 @@ function gameLoop() {
     startBtn.textContent = "Restart Game";
     return;
   }
+
+  // Draw background
+  const bg = new Image();
+  bg.src = "assets/images/bg.jpg";
+  ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
