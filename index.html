@@ -3,35 +3,32 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AURAGNAL - Mystery Shopper</title>
-  <link rel="stylesheet" href="style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cormorant+Garamond:wght@600&display=swap" rel="stylesheet">
+  <title>AURAGNAL GAME</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <!-- Welcome Overlay -->
+  <!-- Welcome Screen -->
   <div id="welcome-screen">
     <h1>Welcome Mystery Shopper</h1>
     <button id="start-game">Start Game</button>
-    <a id="lets-shop" href="https://auragnal.com" target="_blank">Let’s Shop Instead</a>
-  </div>
-
-  <!-- Game Over Screen -->
-  <div id="game-over-screen">
-    <h2>Game Over</h2>
-    <p>Your Score: <span id="final-score">0</span></p>
-    <button onclick="restartGame()">Play Again</button>
-  </div>
-
-  <!-- Scoreboard -->
-  <div id="scoreboard">
-    <p>Score: <span id="score">0</span></p>
+    <button id="shop-instead" onclick="window.location.href='https://auragnal.com'">Let’s Shop Instead</button>
   </div>
 
   <!-- Game Canvas -->
-  <canvas id="gameCanvas" width="1440" height="810"></canvas>
+  <canvas id="gameCanvas" width="1440" height="1080"></canvas>
 
-  <!-- Game Logic -->
+  <!-- Score -->
+  <div id="scoreboard">Score: 0</div>
+
+  <!-- Game Over Screen -->
+  <div id="game-over-screen">
+    <h2>Game Over!</h2>
+    <p id="final-score">Your Score: 0</p>
+    <button id="restart-btn">Restart</button>
+  </div>
+
+  <!-- Game Script -->
   <script src="game.js"></script>
 </body>
 </html>
