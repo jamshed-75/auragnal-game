@@ -4,68 +4,55 @@
   box-sizing: border-box;
 }
 
-body, html {
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  background-color: black;
+body {
   font-family: 'Cinzel Decorative', cursive;
+  background-color: #000;
+  overflow: hidden;
 }
 
 #game-container {
-  position: relative;
   width: 100vw;
   height: 100vh;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
 }
 
 canvas {
-  display: block;
-  width: 100%;
-  height: 100%;
+  border: 5px solid gold;
   background: url("assets/images/bg.jpg") no-repeat center center;
   background-size: cover;
-}
-
-#ui {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
+  display: block;
 }
 
 #game-title {
   color: gold;
-  font-size: 3rem;
-  text-shadow: 2px 2px 10px black;
-  margin-bottom: 1.5rem;
-  pointer-events: auto;
-  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 20px;
+  text-shadow: 2px 2px 4px #000;
 }
 
-#startBtn, #lets-shop {
-  padding: 1rem 2rem;
-  font-size: 1.2rem;
-  margin: 0.5rem;
-  border: none;
-  border-radius: 12px;
+#startBtn,
+#lets-shop {
+  padding: 12px 24px;
+  font-size: 18px;
   background-color: gold;
-  color: black;
+  border: none;
+  color: #000;
   cursor: pointer;
-  font-weight: bold;
-  box-shadow: 0 0 15px black;
-  pointer-events: auto;
-  transition: all 0.3s ease-in-out;
+  border-radius: 10px;
+  margin-top: 15px;
+  font-family: 'Cinzel Decorative', cursive;
+  transition: all 0.3s ease;
+  box-shadow: 2px 2px 8px #222;
   text-decoration: none;
   text-align: center;
 }
 
-#startBtn:hover, #lets-shop:hover {
-  background-color: #ffd700;
+#startBtn:hover,
+#lets-shop:hover {
+  background-color: #fff8dc;
   transform: scale(1.05);
 }
