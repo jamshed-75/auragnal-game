@@ -30,7 +30,6 @@ const sounds = {
 };
 sounds.game.loop = true;
 
-// Handle player using individual frame images
 class Player {
   constructor() {
     this.width = 64;
@@ -61,7 +60,6 @@ class Player {
       this.grounded = false;
     }
 
-    // Animate frames
     this.frameTimer++;
     if (this.frameTimer >= this.frameSpeed) {
       this.frameIndex = (this.frameIndex % this.maxFrames) + 1;
@@ -238,7 +236,6 @@ function gameLoop() {
   collectibles = collectibles.filter(c => !c.marked);
   obstacles = obstacles.filter(o => !o.marked);
 
-  // Difficulty
   if (frameCount % 500 === 0) gameSpeed += 0.5;
 
   drawScore();
