@@ -1,7 +1,6 @@
 * {
   box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+  margin: 0; padding: 0;
 }
 
 body {
@@ -36,7 +35,7 @@ body {
   font-size: 2.5rem;
   color: gold;
   text-shadow: 0 0 12px rgba(255, 215, 0, 0.6);
-  z-index: 2;
+  z-index: 10;
   pointer-events: none;
 }
 
@@ -45,8 +44,7 @@ canvas#gameCanvas {
   height: 100%;
   display: block;
   position: absolute;
-  top: 0;
-  left: 0;
+  top: 0; left: 0;
   z-index: 1;
   background: transparent;
 }
@@ -61,7 +59,7 @@ canvas#gameCanvas {
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  z-index: 3;
+  z-index: 10;
   font-weight: bold;
   box-shadow: 0 0 10px gold;
   transition: transform 0.2s ease;
