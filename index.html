@@ -2,219 +2,36 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AURAGNAL: Mystery Shopper</title>
-  <link rel="stylesheet" href="style.css" />
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #000;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      overflow: hidden;
-    }
-
-    #game-wrapper {
-      text-align: center;
-      width: 100vw;
-      max-width: 1440px;
-    }
-
-    #game-title {
-      font-size: 2.5rem;
-      margin-bottom: 20px;
-      color: gold;
-      text-shadow: 0 0 10px #ffcc00;
-    }
-
-    #game-container {
-      position: relative;
-      width: 1440px;
-      height: 810px;
-      margin: 0 auto;
-      background-color: #000;
-      border: 3px solid gold;
-    }
-
-    #gameCanvas {
-      display: block;
-      width: 100%;
-      height: 100%;
-      background: url('assets/images/bg.jpg') no-repeat center center;
-      background-size: cover;
-    }
-
-    #overlay {
-      position: absolute;
-      bottom: 20px;
-      width: 100%;
-      display: flex;
-      justify-content: space-between;
-      padding: 0 50px;
-    }
-
-    #startButton,
-    #shopButton {
-      padding: 10px 20px;
-      font-size: 1.2rem;
-      background-color: gold;
-      color: black;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      box-shadow: 0 0 10px gold;
-      transition: background 0.3s ease;
-    }
-
-    #startButton:hover,
-    #shopButton:hover {
-      background-color: #fffacd;
-    }
-
-    @media (max-width: 768px) {
-      #game-container {
-        width: 100vw;
-        height: 60vh;
-      }
-
-      #overlay {
-        flex-direction: column;
-        align-items: center;
-        gap: 15px;
-        bottom: 10px;
-      }
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AURAGNAL - Mystery Shopper</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cormorant+Garamond:wght@600&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div id="game-wrapper">
-    <h1 id="game-title">Welcome Mystery Shopper</h1>
 
-    <div id="game-container">
-      <canvas id="gameCanvas" width="1440" height="810"></canvas>
-      <div id="overlay">
-        <button id="startButton">Start Game</button>
-        <button id="shopButton" onclick="location.href='https://auragnal.com'">Let's Shop Instead</button>
-      </div>
-    </div>
+  <!-- Welcome Overlay -->
+  <div id="welcome-screen">
+    <h1>Welcome Mystery Shopper</h1>
+    <button id="start-game">Start Game</button>
+    <a id="lets-shop" href="https://auragnal.com" target="_blank">Let’s Shop Instead</a>
   </div>
 
-  <audio id="start-sound" src="assets/sounds/start.mp3"></audio>
-  <audio id="collect-sound" src="assets/sounds/collect.ogg"></audio>
-  <audio id="jump-sound" src="assets/sounds/jump.wav"></audio>
-  <audio id="death-sound" src="assets/sounds/death.wav"></audio>
-  <audio id="message-sound" src="assets/sounds/message.wav"></audio>
-  <audio id="game-sound" src="assets/sounds/game.wav" loop></audio>
+  <!-- Game Over Screen -->
+  <div id="game-over-screen">
+    <h2>Game Over</h2>
+    <p>Your Score: <span id="final-score">0</span></p>
+    <button onclick="restartGame()">Play Again</button>
+  </div>
 
-  <script>
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    const startButton = document.getElementById('startButton');
-    const gameSound = document.getElementById('game-sound');
-    const jumpSound = document.getElementById('jump-sound');
-    const collectSound = document.getElementById('collect-sound');
-    const deathSound = document.getElementById('death-sound');
+  <!-- Scoreboard -->
+  <div id="scoreboard">
+    <p>Score: <span id="score">0</span></p>
+  </div>
 
-    let isPlaying = false;
-    let player = { x: 100, y: 600, w: 50, h: 80, vy: 0, jumping: false };
-    const gravity = 1;
-    const collectibles = [{ x: 1000, y: 620, w: 40, h: 40 }];
-    const obstacles = [{ x: 800, y: 630, w: 50, h: 50 }];
+  <!-- Game Canvas -->
+  <canvas id="gameCanvas" width="1440" height="810"></canvas>
 
-    function drawPlayer() {
-      ctx.fillStyle = 'gold';
-      ctx.fillRect(player.x, player.y, player.w, player.h);
-    }
-
-    function drawCollectibles() {
-      ctx.fillStyle = 'pink';
-      collectibles.forEach(c => ctx.fillRect(c.x, c.y, c.w, c.h));
-    }
-
-    function drawObstacles() {
-      ctx.fillStyle = 'red';
-      obstacles.forEach(o => ctx.fillRect(o.x, o.y, o.w, o.h));
-    }
-
-    function updateGame() {
-      if (!isPlaying) return;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawPlayer();
-      drawCollectibles();
-      drawObstacles();
-
-      // Gravity
-      player.vy += gravity;
-      player.y += player.vy;
-
-      if (player.y > 600) {
-        player.y = 600;
-        player.vy = 0;
-        player.jumping = false;
-      }
-
-      // Collision Check
-      collectibles.forEach((c, i) => {
-        if (
-          player.x < c.x + c.w &&
-          player.x + player.w > c.x &&
-          player.y < c.y + c.h &&
-          player.y + player.h > c.y
-        ) {
-          collectSound.play();
-          collectibles.splice(i, 1);
-        }
-      });
-
-      obstacles.forEach(o => {
-        if (
-          player.x < o.x + o.w &&
-          player.x + player.w > o.x &&
-          player.y < o.y + o.h &&
-          player.y + player.h > o.y
-        ) {
-          deathSound.play();
-          isPlaying = false;
-        }
-      });
-
-      requestAnimationFrame(updateGame);
-    }
-
-    function startGame() {
-      isPlaying = true;
-      gameSound.play();
-      updateGame();
-    }
-
-    function jump() {
-      if (!player.jumping) {
-        player.vy = -20;
-        jumpSound.play();
-        player.jumping = true;
-      }
-    }
-
-    document.addEventListener('keydown', (e) => {
-      if (e.code === 'Space' || e.code === 'ArrowUp') {
-        jump();
-      }
-    });
-
-    canvas.addEventListener('click', () => {
-      jump();
-    });
-
-    startButton.addEventListener('click', startGame);
-  </script>
+  <!-- Game Logic -->
+  <script src="game.js"></script>
 </body>
 </html>
