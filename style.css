@@ -1,0 +1,48 @@
+body {
+  margin: 0;
+  overflow: hidden;
+  background-color: #000;
+  font-family: 'Cinzel Decorative', cursive;
+}
+
+.game-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background: url('assets/images/bg.jpg') no-repeat center center/cover;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+canvas {
+  border: 5px solid gold;
+  max-width: 90vw;
+  max-height: 90vh;
+}
+
+#startButton, #shopButton {
+  position: absolute;
+  padding: 12px 24px;
+  font-size: 1rem;
+  background-color: gold;
+  border: none;
+  color: #000;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 8px;
+  box-shadow: 0 0 10px gold;
+  transition: 0.3s ease;
+}
+
+#startButton {
+  bottom: 100px;
+}
+
+#shopButton {
+  bottom: 40px;
+  right: 40px;
+  text-decoration: none;
+  text-align: center;
+}
