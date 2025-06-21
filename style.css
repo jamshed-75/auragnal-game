@@ -1,84 +1,146 @@
-/* === style.css for AURAGNAL Game === */
-
-{
-box-sizing: border-box;
-margin: 0;
-padding: 0;
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-body, html {
-width: 100%;
-height: 100%;
-font-family: 'Cinzel Decorative', cursive;
-background: #000;
-color: #fff;
-overflow: hidden;
+body {
+  font-family: 'Cormorant Garamond', serif;
+  background-color: #000;
+  color: #fff;
+  overflow: hidden;
 }
-#welcome-screen, #game-over-screen {
-position: absolute;
-top: 0;
-left: 0;
-width: 100vw;
-height: 100vh;
-background: rgba(0, 0, 0, 0.95);
-z-index: 10;
-display: flex;
-flex-direction: column;
-justify-content: center;
-align-items: center;
-gap: 20px;
-text-align: center;
-padding: 20px;
+
+#welcome-screen {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: url("assets/images/bg.jpg") center center / cover no-repeat;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+  text-align: center;
 }
+
 #welcome-screen h1 {
-font-size: 3rem;
-color: gold;
-text-shadow: 0 0 10px gold;
+  font-size: 2.8rem;
+  color: gold;
+  text-shadow: 0 0 12px #000;
+  margin-bottom: 30px;
 }
+
+#start-game, #shop-instead {
+  font-size: 1.2rem;
+  padding: 14px 28px;
+  margin: 10px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.3s ease;
+}
+
+#start-game {
+  background-color: gold;
+  color: #1a1a1a;
+}
+
+#start-game:hover {
+  background-color: #ffcc00;
+}
+
+#shop-instead {
+  background-color: #1a1a1a;
+  color: gold;
+  border: 2px solid gold;
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+}
+
+#shop-instead:hover {
+  background-color: #333;
+}
+
 #gameCanvas {
-display: block;
-margin: 0 auto;
-border: 5px solid gold;
-background-color: #111;
+  display: block;
+  margin: 0 auto;
+  background-color: #000;
+  border: 5px solid gold;
+  border-radius: 15px;
 }
-button {
-padding: 12px 24px;
-font-size: 1.2rem;
-background-color: #222;
-color: gold;
-border: 2px solid gold;
-border-radius: 10px;
-cursor: pointer;
-transition: 0.3s;
-font-family: 'Cormorant Garamond', serif;
-}
-button:hover {
-background-color: gold;
-color: #111;
-}
+
 #scoreboard {
-position: absolute;
-top: 20px;
-left: 20px;
-background: rgba(0,0,0,0.6);
-padding: 10px 20px;
-border: 2px solid gold;
-color: gold;
-font-size: 1.2rem;
-z-index: 5;
-border-radius: 10px;
-font-family: 'Cormorant Garamond', serif;
+  position: absolute;
+  top: 15px;
+  left: 20px;
+  font-size: 1.5rem;
+  color: gold;
+  display: none;
+  z-index: 5;
+  background: rgba(0,0,0,0.5);
+  padding: 10px 18px;
+  border-radius: 10px;
+  box-shadow: 0 0 8px gold;
 }
+
+#game-over-screen {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.88);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  z-index: 20;
+  color: gold;
+  text-align: center;
+}
+
 #game-over-screen h2 {
-color: red;
-font-size: 2rem;
+  font-size: 2rem;
+  margin-bottom: 20px;
 }
-#lets-shop-button {
-position: absolute;
-bottom: 30px;
-right: 30px;
-font-size: 1rem;
-padding: 10px 20px;
-z-index: 15;
+
+#final-score {
+  font-size: 1.5rem;
+  margin-bottom: 25px;
+}
+
+#restart-btn {
+  padding: 12px 24px;
+  background: gold;
+  color: #1a1a1a;
+  font-weight: bold;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: 0.3s ease;
+}
+
+#restart-btn:hover {
+  background: #ffd700;
+}
+
+@media (max-width: 768px) {
+  #gameCanvas {
+    width: 100%;
+    height: auto;
+  }
+
+  #shop-instead {
+    right: 10px;
+    bottom: 10px;
+    font-size: 1rem;
+  }
+
+  #start-game {
+    font-size: 1rem;
+  }
 }
 
