@@ -1,122 +1,84 @@
-/* Reset and basics */
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
-body, html {
-  height: 100%;
-  background: linear-gradient(135deg, #1a1a1a, #3b3b3b);
-  font-family: 'Cormorant Garamond', serif;
-  color: gold;
+body {
+  font-family: 'Cinzel Decorative', cursive;
+  background-color: #000;
+  color: #fff;
+  overflow: hidden;
   display: flex;
   justify-content: center;
   align-items: center;
-  overflow: hidden;
+  height: 100vh;
 }
 
 #game-container {
   position: relative;
-  width: 1440px;
-  height: 1080px;
-  background: url('./assets/images/bg.jpg') no-repeat center center/cover;
-  border: 8px solid gold;
-  box-shadow: 0 0 30px gold;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-#welcome-text {
-  margin-top: 60px;
-  font-size: 3.5rem;
-  text-shadow: 0 0 15px #588749cc;
-  user-select: none;
-  text-align: center;
-}
-
-#game-canvas {
-  margin-top: 20px;
-  background: transparent;
-  outline: none;
-  border-radius: 12px;
-  box-shadow: 0 0 15px #ffd700aa inset;
-  display: none; /* Hidden initially */
-}
-
-#ui-container {
-  margin-top: 20px;
   width: 100%;
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  align-items: center;
-  position: relative;
-}
-
-button {
-  background: gold;
-  color: #1a1a1a;
-  font-weight: 700;
-  font-size: 1.2rem;
-  padding: 12px 28px;
-  border: none;
-  border-radius: 50px;
-  box-shadow: 0 0 12px #ffd700cc;
-  cursor: pointer;
-  transition: background 0.3s ease;
-  user-select: none;
-}
-
-button:hover {
-  background: #c19a00;
-}
-
-#score-display {
-  font-size: 1.8rem;
-  font-weight: 600;
-  text-shadow: 0 0 10px #ffd700bb;
-  user-select: none;
-  display: none; /* Hidden initially */
-}
-
-#game-over {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: #1a1a1add;
-  padding: 40px 50px;
+  max-width: 1440px;
+  aspect-ratio: 16 / 9;
+  margin: auto;
   border: 4px solid gold;
-  border-radius: 20px;
-  box-shadow: 0 0 30px gold;
+  background-image: url('assets/images/bg.jpg');
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
+}
+
+#game-title {
+  position: absolute;
+  top: 10%;
+  width: 100%;
   text-align: center;
-  z-index: 10;
+  font-size: 2.5rem;
+  color: gold;
+  text-shadow: 0 0 12px rgba(255, 215, 0, 0.6);
+  z-index: 2;
+  pointer-events: none;
 }
 
-#game-over.hidden {
-  display: none;
+canvas#gameCanvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  background: transparent;
 }
 
-#game-over h2 {
-  font-size: 3rem;
-  margin-bottom: 20px;
-  text-shadow: 0 0 20px #ffd700cc;
+#startBtn,
+#lets-shop {
+  position: absolute;
+  padding: 12px 22px;
+  font-size: 1rem;
+  background-color: gold;
+  color: #000;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  z-index: 3;
+  font-weight: bold;
+  box-shadow: 0 0 10px gold;
+  transition: transform 0.2s ease;
 }
 
-#game-over p {
-  font-size: 2rem;
-  margin-bottom: 30px;
+#startBtn:hover,
+#lets-shop:hover {
+  transform: scale(1.05);
 }
 
-#restart-btn {
-  background: gold;
-  color: #1a1a1a;
-  padding: 14px 36px;
-  font-size: 1.3rem;
-  border-radius: 40px;
-  box-shadow: 0 0 15px #ffd700dd;
-  user-select: none;
+#startBtn {
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
+#lets-shop {
+  bottom: 20px;
+  right: 30px;
+}
