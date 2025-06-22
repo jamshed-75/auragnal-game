@@ -1,11 +1,12 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
+
 const startBtn = document.getElementById("startBtn");
 const gameTitle = document.getElementById("game-title");
 const letsShopBtn = document.getElementById("lets-shop");
 const muteBtn = document.getElementById("muteBtn");
 
-let isMuted = false;
+let muted = false;
 
 const sounds = {
   start: new Audio("assets/sound/start.mp3"),
@@ -16,244 +17,236 @@ const sounds = {
   game: new Audio("assets/sound/game.wav"),
 };
 
-for (let key in sounds) {
-  sounds[key].volume = 0.6;
-}
-
 sounds.game.loop = true;
 
-muteBtn.onclick = () => {
-  isMuted = !isMuted;
-  for (let key in sounds) sounds[key].muted = isMuted;
-  muteBtn.textContent = isMuted ? "🔇" : "🔊";
-};
+muteBtn.addEventListener("click", () => {
+  muted = !muted;
+  for (let key in sounds) {
+    sounds[key].muted = muted;
+  }
+  muteBtn.textContent = muted ? "🔇" : "🔊";
+});
 
 function resizeCanvas() {
+  const maxWidth = 1000;
   canvas.width = canvas.clientWidth;
-  canvas.height = canvas.clientHeight;
+  canvas.height = canvas.clientWidth / (16 / 9);
 }
-window.addEventListener("resize", resizeCanvas);
 resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
 
-let gameStarted = false;
-let gameOver = false;
-let score = 0;
-let gameSpeed = 4;
-let gravity = 1.5;
-let frameCount = 0;
-
-const bgImg = new Image();
-bgImg.src = "assets/images/bg.jpg";
-
-let bgX = 0;
-
-function drawBackground() {
-  bgX -= gameSpeed * 0.5;
-  if (bgX <= -canvas.width) bgX = 0;
-  ctx.drawImage(bgImg, bgX, 0, canvas.width, canvas.height);
-  ctx.drawImage(bgImg, bgX + canvas.width, 0, canvas.width, canvas.height);
-}
-
-class Animation {
-  constructor(src, frameWidth, frameHeight, columns, rows) {
+class Sprite {
+  constructor(imageSrc, columns, rows, frameSpeed = 5) {
     this.image = new Image();
-    this.image.src = src;
-    this.frameWidth = frameWidth;
-    this.frameHeight = frameHeight;
+    this.image.src = imageSrc;
     this.columns = columns;
     this.rows = rows;
-    this.totalFrames = columns * rows;
-    this.currentFrame = 0;
-    this.frameDelay = 5;
-    this.frameCount = 0;
+    this.frameSpeed = frameSpeed;
+    this.frame = 0;
+    this.timer = 0;
   }
 
   update() {
-    this.frameCount++;
-    if (this.frameCount >= this.frameDelay) {
-      this.currentFrame = (this.currentFrame + 1) % this.totalFrames;
-      this.frameCount = 0;
+    this.timer++;
+    if (this.timer >= this.frameSpeed) {
+      this.timer = 0;
+      this.frame = (this.frame + 1) % (this.columns * this.rows);
     }
   }
 
-  draw(ctx, x, y, scale = 2) {
-    const col = this.currentFrame % this.columns;
-    const row = Math.floor(this.currentFrame / this.columns);
+  draw(x, y, scale = 1) {
+    const frameW = this.image.width / this.columns;
+    const frameH = this.image.height / this.rows;
+    const cx = (this.frame % this.columns) * frameW;
+    const cy = Math.floor(this.frame / this.columns) * frameH;
+
     ctx.drawImage(
       this.image,
-      col * this.frameWidth,
-      row * this.frameHeight,
-      this.frameWidth,
-      this.frameHeight,
-      x,
-      y,
-      this.frameWidth * scale,
-      this.frameHeight * scale
+      cx, cy, frameW, frameH,
+      x, y, frameW * scale, frameH * scale
     );
   }
 }
 
-const playerAnimations = {
-  idle: new Animation("assets/player/idle/sprite.png", 64, 64, 4, 4),
-  run: new Animation("assets/player/run/sprite.png", 64, 64, 5, 4),
-  jump: new Animation("assets/player/jump/sprite.png", 64, 64, 6, 4),
-  death: new Animation("assets/player/death/sprite.png", 64, 64, 6, 5),
+const animations = {
+  idle: new Sprite("assets/player/idle/sprite.png", 4, 4),
+  run: new Sprite("assets/player/run/sprite.png", 5, 4),
+  jump: new Sprite("assets/player/jump/sprite.png", 6, 4),
+  death: new Sprite("assets/player/death/sprite.png", 6, 5),
 };
 
 class Player {
   constructor() {
-    this.width = 64 * 2;
-    this.height = 64 * 2;
-    this.x = 100;
-    this.y = canvas.height - this.height - 50;
+    this.scale = 1.5;
+    this.anim = animations.idle;
+    this.x = canvas.width * 0.1;
+    this.y = canvas.height * 0.7;
     this.dy = 0;
-    this.jumpPower = -25;
+    this.gravity = 1.5;
+    this.jumpPower = -18;
     this.grounded = true;
+    this.width = 64;
+    this.height = 64;
     this.state = "idle";
   }
 
   update() {
-    this.dy += gravity;
+    this.dy += this.gravity;
     this.y += this.dy;
 
-    if (this.y + this.height >= canvas.height - 50) {
-      this.y = canvas.height - this.height - 50;
+    const ground = canvas.height - this.height * this.scale - 20;
+
+    if (this.y >= ground) {
+      this.y = ground;
       this.dy = 0;
       this.grounded = true;
-      if (this.state === "jump") this.state = "run";
+      if (this.state === "jump") this.setState("run");
     } else {
       this.grounded = false;
     }
+
+    this.anim.update();
+  }
+
+  draw() {
+    this.anim.draw(this.x, this.y, this.scale);
   }
 
   jump() {
     if (this.grounded) {
       this.dy = this.jumpPower;
-      this.state = "jump";
+      this.setState("jump");
       sounds.jump.play();
     }
   }
 
-  draw() {
-    playerAnimations[this.state].update();
-    playerAnimations[this.state].draw(ctx, this.x, this.y);
+  setState(state) {
+    this.state = state;
+    this.anim = animations[state];
+  }
+
+  getBounds() {
+    return {
+      x: this.x,
+      y: this.y,
+      w: this.width * this.scale,
+      h: this.height * this.scale,
+    };
   }
 }
 
 class GameObject {
-  constructor(imgSrc, width, height) {
+  constructor(imageSrc, scale = 1) {
     this.image = new Image();
-    this.image.src = imgSrc;
-    this.width = width;
-    this.height = height;
-    this.x = canvas.width;
-    this.y = canvas.height - height - 50;
-    this.markedForDeletion = false;
+    this.image.src = imageSrc;
+    this.scale = scale;
+    this.width = 60 * scale;
+    this.height = 60 * scale;
+    this.x = canvas.width + Math.random() * 200;
+    this.y = canvas.height - this.height - 20;
+    this.speed = 6;
   }
 
   update() {
-    this.x -= gameSpeed;
-    if (this.x + this.width < 0) this.markedForDeletion = true;
+    this.x -= this.speed;
   }
 
   draw() {
     ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
   }
 
-  collidesWith(player) {
-    return !(
-      player.x > this.x + this.width ||
-      player.x + player.width < this.x ||
-      player.y > this.y + this.height ||
-      player.y + player.height < this.y
+  isOffscreen() {
+    return this.x + this.width < 0;
+  }
+
+  collides(player) {
+    const p = player.getBounds();
+    return (
+      p.x < this.x + this.width &&
+      p.x + p.w > this.x &&
+      p.y < this.y + this.height &&
+      p.y + p.h > this.y
     );
   }
 }
 
 const player = new Player();
+const bg = new Image();
+bg.src = "assets/images/bg.jpg";
 
-const collectibles = [];
-const obstacles = [];
+let collectibles = [];
+let obstacles = [];
+let score = 0;
+let frame = 0;
+let gameRunning = false;
 
-const collectibleImgs = [
-  "assets/images/dress.png",
-  "assets/images/heels.png",
-  "assets/images/handbag.png",
-  "assets/images/earings.png",
-];
+function spawnObjects() {
+  if (frame % 120 === 0) {
+    const c = new GameObject(randomCollectible(), 1.2);
+    collectibles.push(c);
+  }
 
-const obstacleImgs = [
-  "assets/images/obstacle_cart.png",
-  "assets/images/obstacle_bag.png",
-  "assets/images/obstacle_hanger.png",
-];
-
-function spawnCollectible() {
-  const img = collectibleImgs[Math.floor(Math.random() * collectibleImgs.length)];
-  collectibles.push(new GameObject(img, 50, 50));
+  if (frame % 200 === 0) {
+    const o = new GameObject(randomObstacle(), 1.4);
+    obstacles.push(o);
+  }
 }
 
-function spawnObstacle() {
-  const img = obstacleImgs[Math.floor(Math.random() * obstacleImgs.length)];
-  obstacles.push(new GameObject(img, 70, 70));
+function randomCollectible() {
+  const c = ["dress", "handbag", "heels", "earings"];
+  const name = c[Math.floor(Math.random() * c.length)];
+  return `assets/images/${name}.png`;
+}
+
+function randomObstacle() {
+  const o = ["obstacle_cart", "obstacle_bag", "obstacle_hanger"];
+  const name = o[Math.floor(Math.random() * o.length)];
+  return `assets/images/${name}.png`;
+}
+
+function drawBackground() {
+  ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
 }
 
 function drawScore() {
-  ctx.font = "28px Cinzel Decorative, cursive";
   ctx.fillStyle = "gold";
+  ctx.font = "20px Cinzel Decorative";
   ctx.fillText(`Score: ${score}`, 20, 40);
 }
 
-function drawGameOver() {
-  ctx.fillStyle = "rgba(0,0,0,0.6)";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = "gold";
-  ctx.font = "40px Cinzel Decorative, cursive";
-  ctx.textAlign = "center";
-  ctx.fillText("Game Over!", canvas.width / 2, canvas.height / 2 - 40);
-  ctx.font = "24px Cinzel Decorative, cursive";
-  ctx.fillText(`Your Score: ${score}`, canvas.width / 2, canvas.height / 2);
-  ctx.fillText("Tap to Try Again", canvas.width / 2, canvas.height / 2 + 40);
-}
-
 function resetGame() {
-  gameStarted = true;
-  gameOver = false;
   score = 0;
-  frameCount = 0;
-  gameSpeed = 4;
-  player.y = canvas.height - player.height - 50;
-  player.dy = 0;
-  player.state = "run";
-  obstacles.length = 0;
-  collectibles.length = 0;
+  frame = 0;
+  player.x = canvas.width * 0.1;
+  player.setState("run");
+  collectibles = [];
+  obstacles = [];
+  gameRunning = true;
+  startBtn.style.display = "none";
+  gameTitle.style.display = "none";
+  letsShopBtn.style.display = "none";
   sounds.game.currentTime = 0;
-  sounds.start.play();
   sounds.game.play();
-  requestAnimationFrame(gameLoop);
+  loop();
 }
 
-function gameLoop() {
-  if (gameOver) {
-    drawGameOver();
-    return;
-  }
+function loop() {
+  if (!gameRunning) return;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   drawBackground();
 
-  if (frameCount % 120 === 0) spawnCollectible();
-  if (frameCount % 200 === 0) spawnObstacle();
-
   player.update();
   player.draw();
+
+  spawnObjects();
 
   collectibles.forEach((c, i) => {
     c.update();
     c.draw();
-    if (c.collidesWith(player)) {
-      score += 10;
+    if (c.collides(player)) {
       sounds.collect.play();
+      score += 10;
       collectibles.splice(i, 1);
     }
   });
@@ -261,36 +254,36 @@ function gameLoop() {
   obstacles.forEach((o, i) => {
     o.update();
     o.draw();
-    if (o.collidesWith(player)) {
+    if (o.collides(player)) {
       sounds.death.play();
-      gameOver = true;
+      gameOver();
     }
   });
 
+  collectibles = collectibles.filter(c => !c.isOffscreen());
+  obstacles = obstacles.filter(o => !o.isOffscreen());
+
   drawScore();
-
-  collectibles.filter(c => !c.markedForDeletion);
-  obstacles.filter(o => !o.markedForDeletion);
-
-  frameCount++;
-  requestAnimationFrame(gameLoop);
+  frame++;
+  requestAnimationFrame(loop);
 }
 
-startBtn.onclick = () => {
-  gameTitle.style.display = "none";
-  startBtn.style.display = "none";
-  letsShopBtn.style.display = "none";
+function gameOver() {
+  gameRunning = false;
+  startBtn.textContent = "Try Again";
+  startBtn.style.display = "block";
+  gameTitle.style.display = "block";
+  letsShopBtn.style.display = "block";
+  player.setState("death");
+  sounds.game.pause();
+}
+
+startBtn.addEventListener("click", () => {
+  sounds.start.play();
   resetGame();
-};
+});
 
 window.addEventListener("keydown", e => {
   if (e.code === "Space" || e.code === "ArrowUp") player.jump();
 });
-
-window.addEventListener("touchstart", () => {
-  if (gameOver) {
-    resetGame();
-  } else {
-    player.jump();
-  }
-});
+window.addEventListener("touchstart", () => player.jump());
