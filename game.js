@@ -185,7 +185,7 @@ const collectibleImages = [
   "assets/images/dress.png",
   "assets/images/heels.png",
   "assets/images/handbag.png",
-  "assets/images/earings.png"
+  "assets/images/earing.png"
 ];
 
 const obstacleImages = [
