@@ -22,12 +22,12 @@ resizeCanvas();
 
 // Load Sounds
 const sounds = {
-  start: new Audio("assets/sounds/start.mp3"),
-  collect: new Audio("assets/sounds/collect.ogg"),
-  jump: new Audio("assets/sounds/jump.wav"),
-  death: new Audio("assets/sounds/death.wav"),
-  message: new Audio("assets/sounds/message.wav"),
-  game: new Audio("assets/sounds/game.wav"),
+  start: new Audio("assets/sound/start.mp3"),
+  collect: new Audio("assets/sound/collect.ogg"),
+  jump: new Audio("assets/sound/jump.wav"),
+  death: new Audio("assets/sound/death.wav"),
+  message: new Audio("assets/sound/message.wav"),
+  game: new Audio("assets/sound/game.wav"),
 };
 sounds.game.loop = true;
 
