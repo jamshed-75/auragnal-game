@@ -1,26 +1,28 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
+
 const startBtn = document.getElementById("startBtn");
-const gameTitle = document.getElementById("game-title");
 const letsShopBtn = document.getElementById("lets-shop");
+const gameTitle = document.getElementById("game-title");
+const overlay = document.getElementById("overlay");
 const muteBtn = document.getElementById("muteBtn");
 
-let gameStarted = false;
 let isMuted = false;
+let gameStarted = false;
 let gameOver = false;
 let score = 0;
+let gravity = 1.4;
+let frame = 0;
 let gameSpeed = 5;
-let gravity = 1.5;
-let frameCount = 0;
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
 
-// Load background image
-const bgImage = new Image();
-bgImage.src = "assets/images/bg.jpg";
-
-// Load sounds
+// Sounds
 const sounds = {
   start: new Audio("assets/sound/start.mp3"),
   collect: new Audio("assets/sound/collect.ogg"),
@@ -33,57 +35,54 @@ sounds.game.loop = true;
 
 function toggleMute() {
   isMuted = !isMuted;
-  for (const sound of Object.values(sounds)) {
-    sound.muted = isMuted;
-  }
+  Object.values(sounds).forEach(s => s.muted = isMuted);
   muteBtn.textContent = isMuted ? "🔇" : "🔊";
 }
 muteBtn.addEventListener("click", toggleMute);
 
-// Animation handler (spritesheet single PNG: 5 columns x 4 rows)
-class Animation {
-  constructor(imageSrc, rows = 4, cols = 5) {
+// Background image
+const backgroundImg = new Image();
+backgroundImg.src = "assets/images/bg.jpg";
+
+// Character Animation from sprite.png
+class SpriteSheet {
+  constructor(folder, frames = 20) {
     this.image = new Image();
-    this.image.src = imageSrc;
-    this.rows = rows;
-    this.cols = cols;
+    this.image.src = `assets/player/${folder}/sprite.png`;
+    this.frameIndex = 0;
     this.frameWidth = 64;
     this.frameHeight = 64;
-    this.scale = 2;
-    this.currentFrame = 0;
-    this.totalFrames = rows * cols;
-    this.frameSpeed = 6;
-    this.frameTimer = 0;
+    this.frameSpeed = 4;
+    this.timer = 0;
+    this.totalFrames = frames;
   }
   update() {
-    this.frameTimer++;
-    if (this.frameTimer >= this.frameSpeed) {
-      this.currentFrame = (this.currentFrame + 1) % this.totalFrames;
-      this.frameTimer = 0;
+    this.timer++;
+    if (this.timer >= this.frameSpeed) {
+      this.frameIndex = (this.frameIndex + 1) % this.totalFrames;
+      this.timer = 0;
     }
   }
-  draw(x, y) {
-    const col = this.currentFrame % this.cols;
-    const row = Math.floor(this.currentFrame / this.cols);
+  draw(x, y, scale = 2) {
     ctx.drawImage(
       this.image,
-      col * this.frameWidth,
-      row * this.frameHeight,
+      this.frameIndex * this.frameWidth,
+      0,
       this.frameWidth,
       this.frameHeight,
       x,
       y,
-      this.frameWidth * this.scale,
-      this.frameHeight * this.scale
+      this.frameWidth * scale,
+      this.frameHeight * scale
     );
   }
 }
 
 const playerAnimations = {
-  idle: new Animation("assets/player/idle/sprite.png"),
-  run: new Animation("assets/player/run/sprite.png"),
-  jump: new Animation("assets/player/jump/sprite.png"),
-  death: new Animation("assets/player/death/sprite.png"),
+  idle: new SpriteSheet("idle"),
+  run: new SpriteSheet("run"),
+  jump: new SpriteSheet("jump"),
+  death: new SpriteSheet("death"),
 };
 
 class Player {
@@ -94,8 +93,8 @@ class Player {
     this.y = canvas.height - this.height - 40;
     this.dy = 0;
     this.jumpPower = -22;
-    this.grounded = true;
     this.state = "idle";
+    this.grounded = true;
   }
   update() {
     this.dy += gravity;
@@ -114,7 +113,7 @@ class Player {
       this.dy = this.jumpPower;
       this.grounded = false;
       this.state = "jump";
-      sounds.jump.play();
+      if (!isMuted) sounds.jump.play();
     }
   }
   draw() {
@@ -124,24 +123,24 @@ class Player {
 }
 
 class GameObject {
-  constructor(src, width, height, speed) {
+  constructor(src, size = 50) {
     this.image = new Image();
     this.image.src = src;
-    this.width = width;
-    this.height = height;
-    this.x = canvas.width + Math.random() * 300 + 100;
-    this.y = canvas.height - height - 40;
-    this.speed = speed;
-    this.markedForDeletion = false;
+    this.width = size;
+    this.height = size;
+    this.x = canvas.width + Math.random() * 300;
+    this.y = canvas.height - this.height - 40;
+    this.speed = gameSpeed;
+    this.marked = false;
   }
   update() {
     this.x -= this.speed;
-    if (this.x + this.width < 0) this.markedForDeletion = true;
+    if (this.x + this.width < 0) this.marked = true;
   }
   draw() {
     ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
   }
-  collidesWith(player) {
+  collides(player) {
     return !(
       player.x > this.x + this.width ||
       player.x + player.width < this.x ||
@@ -152,116 +151,140 @@ class GameObject {
 }
 
 const player = new Player();
-const collectibles = [];
-const obstacles = [];
 
-const collectibleImages = [
+const collectibleList = [
   "assets/images/dress.png",
   "assets/images/heels.png",
   "assets/images/handbag.png",
   "assets/images/earings.png",
 ];
-const obstacleImages = [
+
+const obstacleList = [
   "assets/images/obstacle_cart.png",
   "assets/images/obstacle_bag.png",
   "assets/images/obstacle_hanger.png",
 ];
 
+let collectibles = [];
+let obstacles = [];
+
 function spawnCollectible() {
-  const img = collectibleImages[Math.floor(Math.random() * collectibleImages.length)];
-  collectibles.push(new GameObject(img, 50, 50, gameSpeed));
+  const img = collectibleList[Math.floor(Math.random() * collectibleList.length)];
+  collectibles.push(new GameObject(img, 48));
 }
+
 function spawnObstacle() {
-  const img = obstacleImages[Math.floor(Math.random() * obstacleImages.length)];
-  obstacles.push(new GameObject(img, 60, 60, gameSpeed));
+  const img = obstacleList[Math.floor(Math.random() * obstacleList.length)];
+  obstacles.push(new GameObject(img, 52));
 }
 
 function drawScore() {
-  ctx.font = "28px Cinzel Decorative, cursive";
   ctx.fillStyle = "gold";
-  ctx.fillText(`Score: ${score}`, 20, 50);
+  ctx.font = "24px Cinzel Decorative, cursive";
+  ctx.fillText(`Score: ${score}`, 20, 40);
 }
 
 function drawGameOver() {
   ctx.fillStyle = "rgba(0,0,0,0.7)";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = "gold";
-  ctx.font = "bold 48px Cinzel Decorative";
   ctx.textAlign = "center";
-  ctx.fillText("Game Over!", canvas.width / 2, canvas.height / 2 - 30);
-  ctx.font = "28px Cinzel Decorative";
-  ctx.fillText(`Score: ${score}`, canvas.width / 2, canvas.height / 2 + 20);
-  ctx.fillText("Tap Start to Try Again", canvas.width / 2, canvas.height / 2 + 60);
+  ctx.font = "38px Cinzel Decorative";
+  ctx.fillText("Game Over", canvas.width / 2, canvas.height / 2 - 20);
+  ctx.font = "22px Cinzel Decorative";
+  ctx.fillText("Tap or press space to try again", canvas.width / 2, canvas.height / 2 + 30);
 }
 
 function resetGame() {
-  gameStarted = true;
-  gameOver = false;
   score = 0;
+  frame = 0;
   gameSpeed = 5;
+  gameOver = false;
   player.y = canvas.height - player.height - 40;
   player.dy = 0;
   player.state = "run";
-  collectibles.length = 0;
-  obstacles.length = 0;
-  startBtn.style.display = "none";
-  letsShopBtn.style.display = "none";
-  gameTitle.style.display = "none";
-  sounds.game.currentTime = 0;
-  sounds.game.play();
-  requestAnimationFrame(gameLoop);
+  collectibles = [];
+  obstacles = [];
+  if (!isMuted) {
+    sounds.start.play();
+    sounds.game.currentTime = 0;
+    sounds.game.play();
+  }
+  overlay.style.display = "none";
+  gameLoop();
 }
 
 function gameLoop() {
-  if (gameOver) {
-    drawGameOver();
-    sounds.game.pause();
-    return;
-  }
+  if (!gameStarted) return;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
+  ctx.drawImage(backgroundImg, 0, 0, canvas.width, canvas.height);
 
-  player.update();
-  player.draw();
+  if (!gameOver) {
+    player.update();
+    player.draw();
 
-  if (frameCount % 160 === 0) spawnCollectible();
-  if (frameCount % 220 === 0) spawnObstacle();
+    if (frame % 130 === 0) spawnCollectible();
+    if (frame % 180 === 0) spawnObstacle();
 
-  for (let c of collectibles) {
-    c.update();
-    c.draw();
-    if (c.collidesWith(player)) {
-      score += 10;
-      sounds.collect.play();
-      c.markedForDeletion = true;
-    }
+    collectibles.forEach((item, index) => {
+      item.update();
+      item.draw();
+      if (item.collides(player)) {
+        score += 10;
+        if (!isMuted) sounds.collect.play();
+        collectibles.splice(index, 1);
+      }
+    });
+
+    obstacles.forEach((obs, index) => {
+      obs.update();
+      obs.draw();
+      if (obs.collides(player)) {
+        gameOver = true;
+        player.state = "death";
+        if (!isMuted) {
+          sounds.death.play();
+          sounds.game.pause();
+        }
+      }
+    });
+
+    collectibles = collectibles.filter(i => !i.marked);
+    obstacles = obstacles.filter(i => !i.marked);
+
+    drawScore();
+    frame++;
+    requestAnimationFrame(gameLoop);
+  } else {
+    player.draw();
+    drawScore();
+    drawGameOver();
   }
-  for (let o of obstacles) {
-    o.update();
-    o.draw();
-    if (o.collidesWith(player)) {
-      sounds.death.play();
-      gameOver = true;
-    }
-  }
-
-  drawScore();
-
-  collectibles.filter(c => !c.markedForDeletion);
-  obstacles.filter(o => !o.markedForDeletion);
-
-  if (frameCount % 500 === 0) gameSpeed += 0.5;
-  frameCount++;
-  requestAnimationFrame(gameLoop);
 }
 
+// Events
 window.addEventListener("keydown", e => {
-  if (e.code === "Space" || e.code === "ArrowUp") player.jump();
+  if (e.code === "Space" || e.code === "ArrowUp") {
+    if (gameOver) {
+      resetGame();
+    } else {
+      player.jump();
+    }
+  }
 });
-window.addEventListener("touchstart", () => player.jump());
+window.addEventListener("touchstart", () => {
+  if (gameOver) {
+    resetGame();
+  } else {
+    player.jump();
+  }
+});
 
 startBtn.addEventListener("click", () => {
-  sounds.start.play();
+  gameStarted = true;
   resetGame();
+});
+letsShopBtn.addEventListener("click", () => {
+  window.location.href = "https://auragnal.com";
 });
