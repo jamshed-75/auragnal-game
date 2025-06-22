@@ -3,21 +3,21 @@ const ctx = canvas.getContext("2d");
 const startBtn = document.getElementById("startBtn");
 const gameTitle = document.getElementById("game-title");
 const letsShopBtn = document.getElementById("lets-shop");
+const muteBtn = document.getElementById("mute-btn");
 
 let gameStarted = false;
 let score = 0;
-let gameSpeed = 4;
+let gameSpeed = 5;
 let gravity = 1.5;
 let frameCount = 0;
-let gameOver = false;
+let isMuted = false;
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-
-window.addEventListener("resize", () => {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-});
+function resizeCanvas() {
+  canvas.width = window.innerWidth * 0.9;
+  canvas.height = window.innerHeight * 0.8;
+}
+resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
 
 const sounds = {
   start: new Audio("assets/sound/start.mp3"),
@@ -29,31 +29,39 @@ const sounds = {
 };
 sounds.game.loop = true;
 
+function toggleMute() {
+  isMuted = !isMuted;
+  for (let key in sounds) {
+    sounds[key].muted = isMuted;
+  }
+  muteBtn.textContent = isMuted ? "🔇" : "🔊";
+}
+
+muteBtn.addEventListener("click", toggleMute);
+
 class Animation {
-  constructor(src, columns, rows) {
+  constructor(imageSrc, frameCols = 5, frameRows = 4) {
     this.image = new Image();
-    this.image.src = src;
-    this.columns = columns;
-    this.rows = rows;
-    this.totalFrames = columns * rows;
+    this.image.src = imageSrc;
+    this.frameCols = frameCols;
+    this.frameRows = frameRows;
     this.frameWidth = 64;
     this.frameHeight = 64;
+    this.frameCount = frameCols * frameRows;
     this.currentFrame = 0;
-    this.frameSpeed = 4;
+    this.frameSpeed = 5;
     this.frameTimer = 0;
   }
-
   update() {
     this.frameTimer++;
     if (this.frameTimer >= this.frameSpeed) {
-      this.currentFrame = (this.currentFrame + 1) % this.totalFrames;
+      this.currentFrame = (this.currentFrame + 1) % this.frameCount;
       this.frameTimer = 0;
     }
   }
-
   draw(ctx, x, y, scale = 2) {
-    const col = this.currentFrame % this.columns;
-    const row = Math.floor(this.currentFrame / this.columns);
+    const col = this.currentFrame % this.frameCols;
+    const row = Math.floor(this.currentFrame / this.frameCols);
     ctx.drawImage(
       this.image,
       col * this.frameWidth,
@@ -69,10 +77,10 @@ class Animation {
 }
 
 const playerAnimations = {
-  idle: new Animation("assets/player/idle/sprite.png", 5, 4),
-  run: new Animation("assets/player/run/sprite.png", 5, 4),
-  jump: new Animation("assets/player/jump/sprite.png", 5, 4),
-  death: new Animation("assets/player/death/sprite.png", 5, 4)
+  idle: new Animation("assets/player/idle/sprite.png"),
+  run: new Animation("assets/player/run/sprite.png"),
+  jump: new Animation("assets/player/jump/sprite.png"),
+  death: new Animation("assets/player/death/sprite.png")
 };
 
 class Player {
@@ -86,7 +94,6 @@ class Player {
     this.grounded = true;
     this.state = "idle";
   }
-
   update() {
     this.dy += gravity;
     this.y += this.dy;
@@ -100,15 +107,14 @@ class Player {
       this.grounded = false;
     }
   }
-
   jump() {
     if (this.grounded) {
       this.dy = this.jumpPower;
+      this.grounded = false;
       this.state = "jump";
       sounds.jump.play();
     }
   }
-
   draw() {
     playerAnimations[this.state].update();
     playerAnimations[this.state].draw(ctx, this.x, this.y);
@@ -126,16 +132,13 @@ class GameObject {
     this.speed = speed;
     this.markedForDeletion = false;
   }
-
   update() {
     this.x -= this.speed;
     if (this.x + this.width < 0) this.markedForDeletion = true;
   }
-
   draw() {
     ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
   }
-
   collidesWith(player) {
     return !(
       player.x > this.x + this.width ||
@@ -148,61 +151,68 @@ class GameObject {
 
 const player = new Player();
 
-const collectibles = [
+const collectibleImages = [
   "assets/images/dress.png",
   "assets/images/heels.png",
   "assets/images/handbag.png",
   "assets/images/earings.png"
 ];
 
-const obstacles = [
+const obstacleImages = [
   "assets/images/obstacle_cart.png",
   "assets/images/obstacle_bag.png",
   "assets/images/obstacle_hanger.png"
 ];
 
-let collectibleObjects = [];
-let obstacleObjects = [];
+let collectibles = [];
+let obstacles = [];
 
 function spawnCollectible() {
-  const img = collectibles[Math.floor(Math.random() * collectibles.length)];
-  collectibleObjects.push(new GameObject(img, 40, 40, gameSpeed));
+  const imgSrc = collectibleImages[Math.floor(Math.random() * collectibleImages.length)];
+  collectibles.push(new GameObject(imgSrc, 50, 50, gameSpeed));
 }
 
 function spawnObstacle() {
-  const img = obstacles[Math.floor(Math.random() * obstacles.length)];
-  obstacleObjects.push(new GameObject(img, 50, 50, gameSpeed));
+  const imgSrc = obstacleImages[Math.floor(Math.random() * obstacleImages.length)];
+  obstacles.push(new GameObject(imgSrc, 60, 60, gameSpeed));
 }
 
 function drawScore() {
-  ctx.font = "24px 'Cinzel Decorative', cursive";
+  ctx.font = "bold 24px Cinzel Decorative, cursive";
   ctx.fillStyle = "gold";
-  ctx.fillText(`Score: ${score}`, 20, 40);
+  ctx.shadowColor = "black";
+  ctx.shadowBlur = 8;
+  ctx.fillText(`Score: ${score}`, 20, 50);
 }
 
 function drawGameOver() {
-  ctx.fillStyle = "rgba(0,0,0,0.8)";
+  ctx.fillStyle = "rgba(0,0,0,0.7)";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = "gold";
-  ctx.font = "36px 'Cinzel Decorative', cursive";
+  ctx.font = "bold 48px Cinzel Decorative, cursive";
   ctx.textAlign = "center";
   ctx.fillText("Game Over!", canvas.width / 2, canvas.height / 2 - 30);
-  ctx.fillText(`Your Score: ${score}`, canvas.width / 2, canvas.height / 2 + 10);
-  ctx.fillText("Tap Restart", canvas.width / 2, canvas.height / 2 + 50);
+  ctx.font = "28px Cinzel Decorative, cursive";
+  ctx.fillText(`Score: ${score}`, canvas.width / 2, canvas.height / 2 + 20);
+  ctx.fillText("Tap Start to Try Again", canvas.width / 2, canvas.height / 2 + 60);
 }
+
+let gameOver = false;
 
 function resetGame() {
   score = 0;
-  gameSpeed = 4;
-  collectibleObjects = [];
-  obstacleObjects = [];
+  gameSpeed = 5;
+  collectibles = [];
+  obstacles = [];
   player.y = canvas.height - player.height - 40;
   player.dy = 0;
-  player.state = "run";
+  player.state = "idle";
   gameOver = false;
-  frameCount = 0;
   sounds.game.currentTime = 0;
   sounds.game.play();
+  gameTitle.style.display = "none";
+  startBtn.style.display = "none";
+  letsShopBtn.style.display = "none";
   requestAnimationFrame(gameLoop);
 }
 
@@ -210,6 +220,11 @@ function gameLoop() {
   if (gameOver) {
     drawGameOver();
     sounds.game.pause();
+    sounds.death.play();
+    startBtn.style.display = "block";
+    letsShopBtn.style.display = "block";
+    gameTitle.style.display = "block";
+    startBtn.textContent = "Restart Game";
     return;
   }
 
@@ -218,31 +233,33 @@ function gameLoop() {
   player.update();
   player.draw();
 
-  if (frameCount % 180 === 0) spawnCollectible();
-  if (frameCount % 200 === 0) spawnObstacle();
+  if (frameCount % 150 === 0) spawnCollectible();
+  if (frameCount % 220 === 0) spawnObstacle();
 
-  collectibleObjects.forEach((c, i) => {
-    c.update();
-    c.draw();
-    if (c.collidesWith(player)) {
+  collectibles.forEach((col, index) => {
+    col.update();
+    col.draw();
+    if (col.collidesWith(player)) {
       score += 10;
       sounds.collect.play();
-      collectibleObjects.splice(i, 1);
+      collectibles.splice(index, 1);
     }
   });
 
-  obstacleObjects.forEach((o, i) => {
-    o.update();
-    o.draw();
-    if (o.collidesWith(player)) {
-      player.state = "death";
-      sounds.death.play();
+  obstacles.forEach((obs, index) => {
+    obs.update();
+    obs.draw();
+    if (obs.collidesWith(player)) {
       gameOver = true;
     }
   });
 
-  collectibleObjects = collectibleObjects.filter(c => !c.markedForDeletion);
-  obstacleObjects = obstacleObjects.filter(o => !o.markedForDeletion);
+  collectibles = collectibles.filter(c => !c.markedForDeletion);
+  obstacles = obstacles.filter(o => !o.markedForDeletion);
+
+  if (frameCount % 500 === 0) {
+    gameSpeed += 0.5;
+  }
 
   drawScore();
 
@@ -250,21 +267,27 @@ function gameLoop() {
   requestAnimationFrame(gameLoop);
 }
 
+function handleKeyDown(e) {
+  if (e.code === "Space" || e.code === "ArrowUp") {
+    player.jump();
+  }
+}
+
+function handleTouchStart() {
+  player.jump();
+}
+
 startBtn.addEventListener("click", () => {
   if (!gameStarted) {
     gameStarted = true;
-    startBtn.style.display = "none";
-    gameTitle.style.display = "none";
-    letsShopBtn.style.display = "none";
-    player.state = "run";
-    sounds.start.play();
-    resetGame();
-  } else if (gameOver) {
-    resetGame();
   }
+  sounds.start.play();
+  resetGame();
 });
 
-window.addEventListener("keydown", e => {
-  if (e.code === "Space" || e.code === "ArrowUp") player.jump();
+letsShopBtn.addEventListener("click", () => {
+  window.location.href = "https://auragnal.com";
 });
-window.addEventListener("touchstart", () => player.jump());
+
+window.addEventListener("keydown", handleKeyDown);
+window.addEventListener("touchstart", handleTouchStart);
