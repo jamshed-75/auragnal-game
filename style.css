@@ -1,78 +1,73 @@
-@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&display=swap');
-
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-html, body {
+body, html {
+  width: 100%;
   height: 100%;
-  background: black;
-  font-family: 'Cinzel Decorative', cursive;
   overflow: hidden;
+  font-family: 'Cinzel Decorative', cursive;
+  background: black;
 }
 
 #game-container {
   position: relative;
-  width: 100vw;
+  width: 100%;
   height: 100vh;
-  border: 6px solid gold;
   overflow: hidden;
+  background: black;
 }
 
-canvas {
+#gameCanvas {
   display: block;
-  background: url("assets/images/bg.jpg") no-repeat center center;
-  background-size: cover;
-}
-
-#overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
   width: 100%;
   height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0,0,0,0.6);
-  z-index: 2;
 }
 
 #game-title {
-  color: gold;
-  font-size: 2.5rem;
-  margin-bottom: 30px;
+  position: absolute;
+  top: 8%;
+  width: 100%;
   text-align: center;
+  font-size: 2rem;
+  color: gold;
+  z-index: 10;
 }
 
-button {
-  font-family: inherit;
+#startBtn,
+#lets-shop {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 14px 30px;
   font-size: 1.2rem;
-  padding: 10px 25px;
-  margin: 10px;
-  background-color: gold;
   border: none;
+  border-radius: 12px;
+  background-color: gold;
   color: black;
   cursor: pointer;
-  border-radius: 10px;
-  transition: 0.3s;
+  z-index: 10;
+  font-weight: bold;
 }
 
-button:hover {
-  background-color: white;
+#startBtn {
+  bottom: 22%;
+}
+
+#lets-shop {
+  bottom: 12%;
 }
 
 #muteBtn {
   position: absolute;
-  bottom: 20px;
-  right: 20px;
-  font-size: 1.4rem;
-  padding: 8px;
-  background-color: rgba(0,0,0,0.7);
-  border: 2px solid gold;
+  top: 10px;
+  right: 10px;
+  z-index: 15;
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
   color: gold;
-  border-radius: 50%;
+  cursor: pointer;
 }
