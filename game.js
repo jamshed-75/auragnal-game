@@ -5,23 +5,8 @@ const gameTitle = document.getElementById("game-title");
 const letsShopBtn = document.getElementById("lets-shop");
 const muteBtn = document.getElementById("muteBtn");
 
-let gameStarted = false;
-let score = 0;
-let gravity = 1.5;
-let frameCount = 0;
-let gameSpeed = 5;
-let gameOver = false;
 let isMuted = false;
 
-canvas.width = 1280;
-canvas.height = 720;
-
-// Background
-const backgroundImg = new Image();
-backgroundImg.src = "assets/images/bg.jpg";
-let bgX = 0;
-
-// Sounds
 const sounds = {
   start: new Audio("assets/sound/start.mp3"),
   collect: new Audio("assets/sound/collect.ogg"),
@@ -30,44 +15,74 @@ const sounds = {
   message: new Audio("assets/sound/message.wav"),
   game: new Audio("assets/sound/game.wav"),
 };
-Object.values(sounds).forEach(sound => sound.volume = 0.8);
+
+for (let key in sounds) {
+  sounds[key].volume = 0.6;
+}
+
 sounds.game.loop = true;
 
-// Mute toggle
 muteBtn.onclick = () => {
   isMuted = !isMuted;
-  Object.values(sounds).forEach(s => s.muted = isMuted);
+  for (let key in sounds) sounds[key].muted = isMuted;
   muteBtn.textContent = isMuted ? "🔇" : "🔊";
 };
 
-// Player Animation using sprite sheet (5x4)
-class Sprite {
-  constructor(src, framesX, framesY) {
+function resizeCanvas() {
+  canvas.width = canvas.clientWidth;
+  canvas.height = canvas.clientHeight;
+}
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas();
+
+let gameStarted = false;
+let gameOver = false;
+let score = 0;
+let gameSpeed = 4;
+let gravity = 1.5;
+let frameCount = 0;
+
+const bgImg = new Image();
+bgImg.src = "assets/images/bg.jpg";
+
+let bgX = 0;
+
+function drawBackground() {
+  bgX -= gameSpeed * 0.5;
+  if (bgX <= -canvas.width) bgX = 0;
+  ctx.drawImage(bgImg, bgX, 0, canvas.width, canvas.height);
+  ctx.drawImage(bgImg, bgX + canvas.width, 0, canvas.width, canvas.height);
+}
+
+class Animation {
+  constructor(src, frameWidth, frameHeight, columns, rows) {
     this.image = new Image();
     this.image.src = src;
-    this.framesX = framesX;
-    this.framesY = framesY;
-    this.frame = 0;
-    this.tick = 0;
-    this.maxFrames = framesX * framesY;
-    this.frameWidth = 64;
-    this.frameHeight = 64;
+    this.frameWidth = frameWidth;
+    this.frameHeight = frameHeight;
+    this.columns = columns;
+    this.rows = rows;
+    this.totalFrames = columns * rows;
+    this.currentFrame = 0;
+    this.frameDelay = 5;
+    this.frameCount = 0;
   }
 
   update() {
-    this.tick++;
-    if (this.tick % 5 === 0) {
-      this.frame = (this.frame + 1) % this.maxFrames;
+    this.frameCount++;
+    if (this.frameCount >= this.frameDelay) {
+      this.currentFrame = (this.currentFrame + 1) % this.totalFrames;
+      this.frameCount = 0;
     }
   }
 
-  draw(x, y, scale = 2) {
-    const fx = this.frame % this.framesX;
-    const fy = Math.floor(this.frame / this.framesX);
+  draw(ctx, x, y, scale = 2) {
+    const col = this.currentFrame % this.columns;
+    const row = Math.floor(this.currentFrame / this.columns);
     ctx.drawImage(
       this.image,
-      fx * this.frameWidth,
-      fy * this.frameHeight,
+      col * this.frameWidth,
+      row * this.frameHeight,
       this.frameWidth,
       this.frameHeight,
       x,
@@ -78,21 +93,21 @@ class Sprite {
   }
 }
 
-const animations = {
-  run: new Sprite("assets/player/run/sprite.png", 5, 4),
-  jump: new Sprite("assets/player/jump/sprite.png", 6, 4),
-  idle: new Sprite("assets/player/idle/sprite.png", 4, 4),
-  death: new Sprite("assets/player/death/sprite.png", 6, 5),
+const playerAnimations = {
+  idle: new Animation("assets/player/idle/sprite.png", 64, 64, 4, 4),
+  run: new Animation("assets/player/run/sprite.png", 64, 64, 5, 4),
+  jump: new Animation("assets/player/jump/sprite.png", 64, 64, 6, 4),
+  death: new Animation("assets/player/death/sprite.png", 64, 64, 6, 5),
 };
 
 class Player {
   constructor() {
     this.width = 64 * 2;
     this.height = 64 * 2;
-    this.x = 150;
-    this.y = canvas.height - this.height - 40;
+    this.x = 100;
+    this.y = canvas.height - this.height - 50;
     this.dy = 0;
-    this.jumpPower = -22;
+    this.jumpPower = -25;
     this.grounded = true;
     this.state = "idle";
   }
@@ -101,8 +116,8 @@ class Player {
     this.dy += gravity;
     this.y += this.dy;
 
-    if (this.y + this.height >= canvas.height - 40) {
-      this.y = canvas.height - this.height - 40;
+    if (this.y + this.height >= canvas.height - 50) {
+      this.y = canvas.height - this.height - 50;
       this.dy = 0;
       this.grounded = true;
       if (this.state === "jump") this.state = "run";
@@ -120,136 +135,123 @@ class Player {
   }
 
   draw() {
-    animations[this.state].update();
-    animations[this.state].draw(this.x, this.y);
+    playerAnimations[this.state].update();
+    playerAnimations[this.state].draw(ctx, this.x, this.y);
   }
 }
 
 class GameObject {
-  constructor(src, w, h, speed) {
+  constructor(imgSrc, width, height) {
     this.image = new Image();
-    this.image.src = src;
+    this.image.src = imgSrc;
+    this.width = width;
+    this.height = height;
     this.x = canvas.width;
-    this.y = canvas.height - h - 40;
-    this.width = w;
-    this.height = h;
-    this.speed = speed;
-    this.marked = false;
+    this.y = canvas.height - height - 50;
+    this.markedForDeletion = false;
   }
 
   update() {
-    this.x -= this.speed;
-    if (this.x + this.width < 0) this.marked = true;
+    this.x -= gameSpeed;
+    if (this.x + this.width < 0) this.markedForDeletion = true;
   }
 
   draw() {
     ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
   }
 
-  collides(p) {
+  collidesWith(player) {
     return !(
-      p.x > this.x + this.width ||
-      p.x + p.width < this.x ||
-      p.y > this.y + this.height ||
-      p.y + p.height < this.y
+      player.x > this.x + this.width ||
+      player.x + player.width < this.x ||
+      player.y > this.y + this.height ||
+      player.y + player.height < this.y
     );
   }
 }
 
 const player = new Player();
-let collectibles = [];
-let obstacles = [];
 
-const collectibleImages = [
+const collectibles = [];
+const obstacles = [];
+
+const collectibleImgs = [
   "assets/images/dress.png",
   "assets/images/heels.png",
   "assets/images/handbag.png",
-  "assets/images/earings.png"
+  "assets/images/earings.png",
 ];
 
-const obstacleImages = [
+const obstacleImgs = [
   "assets/images/obstacle_cart.png",
   "assets/images/obstacle_bag.png",
-  "assets/images/obstacle_hanger.png"
+  "assets/images/obstacle_hanger.png",
 ];
 
 function spawnCollectible() {
-  const img = collectibleImages[Math.floor(Math.random() * collectibleImages.length)];
-  collectibles.push(new GameObject(img, 50, 50, gameSpeed));
+  const img = collectibleImgs[Math.floor(Math.random() * collectibleImgs.length)];
+  collectibles.push(new GameObject(img, 50, 50));
 }
 
 function spawnObstacle() {
-  const img = obstacleImages[Math.floor(Math.random() * obstacleImages.length)];
-  obstacles.push(new GameObject(img, 60, 60, gameSpeed));
-}
-
-function drawBackground() {
-  bgX -= gameSpeed;
-  if (bgX <= -canvas.width) bgX = 0;
-  ctx.drawImage(backgroundImg, bgX, 0, canvas.width, canvas.height);
-  ctx.drawImage(backgroundImg, bgX + canvas.width, 0, canvas.width, canvas.height);
+  const img = obstacleImgs[Math.floor(Math.random() * obstacleImgs.length)];
+  obstacles.push(new GameObject(img, 70, 70));
 }
 
 function drawScore() {
-  ctx.font = "bold 28px Cinzel Decorative, cursive";
+  ctx.font = "28px Cinzel Decorative, cursive";
   ctx.fillStyle = "gold";
-  ctx.shadowColor = "black";
-  ctx.shadowBlur = 8;
-  ctx.fillText(`Score: ${score}`, 30, 40);
+  ctx.fillText(`Score: ${score}`, 20, 40);
 }
 
 function drawGameOver() {
-  ctx.fillStyle = "rgba(0,0,0,0.7)";
+  ctx.fillStyle = "rgba(0,0,0,0.6)";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = "gold";
-  ctx.font = "bold 40px Cinzel Decorative";
+  ctx.font = "40px Cinzel Decorative, cursive";
   ctx.textAlign = "center";
-  ctx.fillText("Game Over!", canvas.width / 2, canvas.height / 2 - 20);
-  ctx.font = "24px Cinzel Decorative";
-  ctx.fillText(`Score: ${score}`, canvas.width / 2, canvas.height / 2 + 20);
-  ctx.fillText("Tap to Try Again", canvas.width / 2, canvas.height / 2 + 60);
+  ctx.fillText("Game Over!", canvas.width / 2, canvas.height / 2 - 40);
+  ctx.font = "24px Cinzel Decorative, cursive";
+  ctx.fillText(`Your Score: ${score}`, canvas.width / 2, canvas.height / 2);
+  ctx.fillText("Tap to Try Again", canvas.width / 2, canvas.height / 2 + 40);
 }
 
 function resetGame() {
-  score = 0;
-  gameSpeed = 5;
+  gameStarted = true;
   gameOver = false;
+  score = 0;
   frameCount = 0;
-  collectibles = [];
-  obstacles = [];
-  player.y = canvas.height - player.height - 40;
+  gameSpeed = 4;
+  player.y = canvas.height - player.height - 50;
   player.dy = 0;
   player.state = "run";
-  startBtn.style.display = "none";
-  letsShopBtn.style.display = "none";
-  gameTitle.style.display = "none";
+  obstacles.length = 0;
+  collectibles.length = 0;
   sounds.game.currentTime = 0;
+  sounds.start.play();
   sounds.game.play();
-  animate();
+  requestAnimationFrame(gameLoop);
 }
 
-function animate() {
+function gameLoop() {
   if (gameOver) {
     drawGameOver();
-    sounds.game.pause();
-    sounds.death.play();
-    canvas.addEventListener("click", resetGame, { once: true });
     return;
   }
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   drawBackground();
 
+  if (frameCount % 120 === 0) spawnCollectible();
+  if (frameCount % 200 === 0) spawnObstacle();
+
   player.update();
   player.draw();
-
-  if (frameCount % 120 === 0) spawnCollectible();
-  if (frameCount % 160 === 0) spawnObstacle();
 
   collectibles.forEach((c, i) => {
     c.update();
     c.draw();
-    if (c.collides(player)) {
+    if (c.collidesWith(player)) {
       score += 10;
       sounds.collect.play();
       collectibles.splice(i, 1);
@@ -259,31 +261,36 @@ function animate() {
   obstacles.forEach((o, i) => {
     o.update();
     o.draw();
-    if (o.collides(player)) {
-      player.state = "death";
+    if (o.collidesWith(player)) {
+      sounds.death.play();
       gameOver = true;
     }
   });
 
-  collectibles = collectibles.filter(c => !c.marked);
-  obstacles = obstacles.filter(o => !o.marked);
-
   drawScore();
 
+  collectibles.filter(c => !c.markedForDeletion);
+  obstacles.filter(o => !o.markedForDeletion);
+
   frameCount++;
-  requestAnimationFrame(animate);
+  requestAnimationFrame(gameLoop);
 }
+
+startBtn.onclick = () => {
+  gameTitle.style.display = "none";
+  startBtn.style.display = "none";
+  letsShopBtn.style.display = "none";
+  resetGame();
+};
 
 window.addEventListener("keydown", e => {
   if (e.code === "Space" || e.code === "ArrowUp") player.jump();
 });
-window.addEventListener("touchstart", () => player.jump());
 
-startBtn.addEventListener("click", () => {
-  if (!gameStarted) {
-    gameStarted = true;
-    player.state = "run";
-    sounds.start.play();
+window.addEventListener("touchstart", () => {
+  if (gameOver) {
     resetGame();
+  } else {
+    player.jump();
   }
 });
