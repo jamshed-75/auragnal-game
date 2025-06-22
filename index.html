@@ -9,10 +9,12 @@
 <body>
   <div id="game-container">
     <canvas id="gameCanvas"></canvas>
-    <div id="game-title">Welcome to Mystery Shopper</div>
-    <button id="startBtn">Start Game</button>
-    <button id="lets-shop" onclick="window.open('https://auragnal.com', '_blank')">Let's Shop Instead</button>
-    <button id="muteBtn">🔊</button>
+    <div id="ui">
+      <h1 id="game-title">Welcome to Mystery Shopper</h1>
+      <button id="startBtn">Start Game</button>
+      <button id="lets-shop" onclick="location.href='https://auragnal.com'">Let’s Shop Instead</button>
+      <button id="muteBtn">🔊</button>
+    </div>
   </div>
   <script src="game.js"></script>
 </body>
