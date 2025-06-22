@@ -18,16 +18,16 @@ const bg = new Image();
 bg.src = "assets/images/bg.jpg";
 
 function resizeCanvas() {
-  const container = document.getElementById("game-frame");
+  const container = document.getElementById("game-container");
+  if (!container) return;
   canvas.width = container.clientWidth;
   canvas.height = container.clientHeight;
 }
 
-window.addEventListener("load", () => {
-  resizeCanvas(); 
+window.addEventListener("DOMContentLoaded", () => {
+  resizeCanvas();
+  window.addEventListener("resize", resizeCanvas);
 });
-
-window.addEventListener("resize", resizeCanvas); 
 
 // Load Sounds
 const sounds = {
