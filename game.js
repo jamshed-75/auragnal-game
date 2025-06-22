@@ -3,23 +3,10 @@ const ctx = canvas.getContext("2d");
 const startBtn = document.getElementById("startBtn");
 const gameTitle = document.getElementById("game-title");
 const letsShopBtn = document.getElementById("lets-shop");
+const muteBtn = document.getElementById("muteBtn");
 
-let gameStarted = false;
-let score = 0;
-let gameSpeed = 5;
-let gravity = 1.5;
-let frameCount = 0;
-let gameOver = false;
+let isMuted = false;
 
-function resizeCanvas() {
-  const container = document.getElementById("game-container");
-  canvas.width = container.clientWidth;
-  canvas.height = container.clientHeight;
-}
-window.addEventListener("resize", resizeCanvas);
-resizeCanvas();
-
-// Load Sounds
 const sounds = {
   start: new Audio("assets/sound/start.mp3"),
   collect: new Audio("assets/sound/collect.ogg"),
@@ -28,79 +15,100 @@ const sounds = {
   message: new Audio("assets/sound/message.wav"),
   game: new Audio("assets/sound/game.wav"),
 };
+
+for (let key in sounds) sounds[key].volume = 1;
 sounds.game.loop = true;
 
-// Universal SpriteSheet class
-class SpriteSheet {
-  constructor(folder, totalFrames, columns) {
+function playSound(name) {
+  if (!isMuted && sounds[name]) sounds[name].play();
+}
+
+function toggleMute() {
+  isMuted = !isMuted;
+  muteBtn.textContent = isMuted ? "🔇" : "🔊";
+  if (isMuted) sounds.game.pause();
+  else sounds.game.play();
+}
+muteBtn.onclick = toggleMute;
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas();
+
+// Background
+const bg = new Image();
+bg.src = "assets/images/bg.jpg";
+
+let bgX = 0;
+
+// Animation class with custom rows/cols
+class SpriteAnimation {
+  constructor(src, columns, rows) {
     this.image = new Image();
-    this.image.src = `assets/player/${folder}/sprite.png`;
-    this.frameIndex = 0;
-    this.totalFrames = totalFrames;
+    this.image.src = src;
     this.columns = columns;
-    this.rows = Math.ceil(totalFrames / columns);
-    this.frameSpeed = 4;
+    this.rows = rows;
+    this.totalFrames = columns * rows;
+    this.currentFrame = 0;
+    this.frameSpeed = 5;
     this.timer = 0;
-
-    this.frameWidth = 64; // fallback until image loads
-    this.frameHeight = 64;
-
-    this.image.onload = () => {
-      this.frameWidth = this.image.width / this.columns;
-      this.frameHeight = this.image.height / this.rows;
-    };
   }
 
   update() {
     this.timer++;
     if (this.timer >= this.frameSpeed) {
-      this.frameIndex = (this.frameIndex + 1) % this.totalFrames;
+      this.currentFrame = (this.currentFrame + 1) % this.totalFrames;
       this.timer = 0;
     }
   }
 
-  draw(x, y, scale = 1.8) {
-    const col = this.frameIndex % this.columns;
-    const row = Math.floor(this.frameIndex / this.columns);
+  draw(ctx, x, y, scale = 2) {
+    const frameWidth = this.image.width / this.columns;
+    const frameHeight = this.image.height / this.rows;
+    const col = this.currentFrame % this.columns;
+    const row = Math.floor(this.currentFrame / this.columns);
     ctx.drawImage(
       this.image,
-      col * this.frameWidth,
-      row * this.frameHeight,
-      this.frameWidth,
-      this.frameHeight,
+      col * frameWidth,
+      row * frameHeight,
+      frameWidth,
+      frameHeight,
       x,
       y,
-      this.frameWidth * scale,
-      this.frameHeight * scale
+      frameWidth * scale,
+      frameHeight * scale
     );
   }
 }
 
-// Player animations with exact frame counts and columns per your specs
 const playerAnimations = {
-  idle: new SpriteSheet("idle", 16, 4),
-  run: new SpriteSheet("run", 20, 5),
-  jump: new SpriteSheet("jump", 24, 6),
-  death: new SpriteSheet("death", 30, 6),
+  idle: new SpriteAnimation("assets/player/idle/sprite.png", 4, 4),
+  run: new SpriteAnimation("assets/player/run/sprite.png", 5, 4),
+  jump: new SpriteAnimation("assets/player/jump/sprite.png", 6, 4),
+  death: new SpriteAnimation("assets/player/death/sprite.png", 6, 5),
 };
 
 class Player {
   constructor() {
-    this.width = 64 * 2; // will be overridden visually by sprite scale
-    this.height = 64 * 2;
     this.x = 100;
-    this.y = canvas.height - this.height - 40;
+    this.y = 0;
     this.dy = 0;
+    this.state = "idle";
+    this.width = 80;
+    this.height = 100;
     this.jumpPower = -22;
-    this.grounded = true;
-    this.state = "idle"; // idle, run, jump, death
+    this.grounded = false;
   }
-  update() {
-    this.dy += gravity;
-    this.y += this.dy;
 
-    if (this.y + this.height >= canvas.height - 40) {
-      this.y = canvas.height - this.height - 40;
+  update() {
+    this.dy += 1.2;
+    this.y += this.dy;
+    const ground = canvas.height - this.height - 40;
+    if (this.y >= ground) {
+      this.y = ground;
       this.dy = 0;
       this.grounded = true;
       if (this.state === "jump") this.state = "run";
@@ -108,105 +116,103 @@ class Player {
       this.grounded = false;
     }
   }
+
   jump() {
     if (this.grounded) {
       this.dy = this.jumpPower;
-      this.grounded = false;
       this.state = "jump";
-      sounds.jump.play();
+      playSound("jump");
     }
   }
+
   draw() {
     playerAnimations[this.state].update();
-    playerAnimations[this.state].draw(this.x, this.y, 1.8);
+    playerAnimations[this.state].draw(ctx, this.x, this.y, 2);
   }
 }
 
 class GameObject {
-  constructor(imgSrc, width, height, speed) {
+  constructor(src, w, h) {
     this.image = new Image();
-    this.image.src = imgSrc;
-    this.width = width;
-    this.height = height;
-    this.x = canvas.width + Math.random() * 300 + 100;
-    this.y = canvas.height - height - 40;
-    this.speed = speed;
-    this.markedForDeletion = false;
+    this.image.src = src;
+    this.width = w;
+    this.height = h;
+    this.x = canvas.width + Math.random() * 300;
+    this.y = canvas.height - h - 40;
+    this.speed = 6;
+    this.marked = false;
   }
+
   update() {
     this.x -= this.speed;
-    if (this.x + this.width < 0) this.markedForDeletion = true;
+    if (this.x + this.width < 0) this.marked = true;
   }
+
   draw() {
     ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
   }
-  collidesWith(player) {
+
+  collides(p) {
     return !(
-      player.x > this.x + this.width ||
-      player.x + player.width < this.x ||
-      player.y > this.y + this.height ||
-      player.y + player.height < this.y
+      p.x > this.x + this.width ||
+      p.x + p.width < this.x ||
+      p.y > this.y + this.height ||
+      p.y + p.height < this.y
     );
   }
 }
 
 const player = new Player();
+let collectibles = [];
+let obstacles = [];
+let gameOver = false;
+let frame = 0;
+let score = 0;
 
-const collectibleImages = [
+const collectibleAssets = [
   "assets/images/dress.png",
-  "assets/images/heels.png",
   "assets/images/handbag.png",
   "assets/images/earings.png",
+  "assets/images/heels.png",
 ];
 
-const obstacleImages = [
-  "assets/images/obstacle_cart.png",
+const obstacleAssets = [
   "assets/images/obstacle_bag.png",
+  "assets/images/obstacle_cart.png",
   "assets/images/obstacle_hanger.png",
 ];
 
-let collectibles = [];
-let obstacles = [];
-
-function spawnCollectible() {
-  const imgSrc = collectibleImages[Math.floor(Math.random() * collectibleImages.length)];
-  collectibles.push(new GameObject(imgSrc, 40, 40, gameSpeed));
+function spawn() {
+  if (frame % 140 === 0) {
+    collectibles.push(new GameObject(collectibleAssets[Math.floor(Math.random() * collectibleAssets.length)], 50, 50));
+  }
+  if (frame % 180 === 0) {
+    obstacles.push(new GameObject(obstacleAssets[Math.floor(Math.random() * obstacleAssets.length)], 60, 60));
+  }
 }
 
-function spawnObstacle() {
-  const imgSrc = obstacleImages[Math.floor(Math.random() * obstacleImages.length)];
-  obstacles.push(new GameObject(imgSrc, 50, 50, gameSpeed));
+function drawBackground() {
+  ctx.drawImage(bg, bgX, 0, canvas.width, canvas.height);
+  ctx.drawImage(bg, bgX + canvas.width, 0, canvas.width, canvas.height);
+  bgX -= 2;
+  if (bgX <= -canvas.width) bgX = 0;
 }
 
 function drawScore() {
-  ctx.font = "bold 28px Cinzel Decorative, cursive";
+  ctx.font = "24px Cinzel Decorative";
   ctx.fillStyle = "gold";
-  ctx.shadowColor = "black";
-  ctx.shadowBlur = 8;
-  ctx.fillText(`Score: ${score}`, 20, 50);
-}
-
-function drawGameOver() {
-  ctx.fillStyle = "rgba(0,0,0,0.7)";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = "gold";
-  ctx.font = "bold 48px Cinzel Decorative, cursive";
-  ctx.textAlign = "center";
-  ctx.fillText("Game Over!", canvas.width / 2, canvas.height / 2 - 30);
-  ctx.font = "28px Cinzel Decorative, cursive";
-  ctx.fillText(`Your Score: ${score}`, canvas.width / 2, canvas.height / 2 + 20);
-  ctx.fillText("Tap Try Again to restart", canvas.width / 2, canvas.height / 2 + 60);
+  ctx.fillText(`Score: ${score}`, 20, 40);
 }
 
 function resetGame() {
+  gameOver = false;
   score = 0;
-  gameSpeed = 5;
+  frame = 0;
+  player.y = canvas.height - player.height - 40;
+  player.state = "run";
   collectibles = [];
   obstacles = [];
-  player.y = canvas.height - player.height - 40;
-  player.dy = 0;
-  player.state = "idle";
-  gameOver = false;
+  playSound("start");
   sounds.game.currentTime = 0;
   sounds.game.play();
   gameTitle.style.display = "none";
@@ -215,87 +221,65 @@ function resetGame() {
   requestAnimationFrame(gameLoop);
 }
 
+function drawGameOver() {
+  ctx.fillStyle = "rgba(0,0,0,0.8)";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "gold";
+  ctx.font = "bold 42px Cinzel Decorative";
+  ctx.textAlign = "center";
+  ctx.fillText("Game Over", canvas.width / 2, canvas.height / 2 - 30);
+  ctx.font = "24px Cinzel Decorative";
+  ctx.fillText(`Your Score: ${score}`, canvas.width / 2, canvas.height / 2 + 20);
+  ctx.fillText("Tap to try again", canvas.width / 2, canvas.height / 2 + 60);
+}
+
 function gameLoop() {
   if (gameOver) {
     drawGameOver();
-    sounds.game.pause();
-    sounds.death.play();
-    startBtn.style.display = "block";
-    letsShopBtn.style.display = "block";
-    gameTitle.style.display = "block";
-    startBtn.textContent = "Restart Game";
     return;
   }
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  // Draw background
-  const bg = new Image();
-  bg.src = "assets/images/bg.jpg";
-  ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
-
-  // Draw player
+  drawBackground();
   player.update();
   player.draw();
+  spawn();
 
-  // Spawn collectibles and obstacles
-  if (frameCount % 150 === 0) spawnCollectible();
-  if (frameCount % 200 === 0) spawnObstacle();
-
-  // Update and draw collectibles
-  collectibles.forEach((col, index) => {
-    col.update();
-    col.draw();
-    if (col.collidesWith(player)) {
+  collectibles.forEach((c, i) => {
+    c.update();
+    c.draw();
+    if (c.collides(player)) {
+      playSound("collect");
       score += 10;
-      sounds.collect.play();
-      collectibles.splice(index, 1);
+      collectibles.splice(i, 1);
     }
   });
 
-  // Update and draw obstacles
-  obstacles.forEach((obs, index) => {
-    obs.update();
-    obs.draw();
-    if (obs.collidesWith(player)) {
+  obstacles.forEach((o, i) => {
+    o.update();
+    o.draw();
+    if (o.collides(player)) {
+      playSound("death");
       gameOver = true;
     }
   });
 
-  // Remove offscreen
-  collectibles = collectibles.filter(c => !c.markedForDeletion);
-  obstacles = obstacles.filter(o => !o.markedForDeletion);
-
-  // Increase difficulty gradually
-  if (frameCount % 500 === 0) {
-    gameSpeed += 0.5;
-  }
-
+  collectibles = collectibles.filter(c => !c.marked);
+  obstacles = obstacles.filter(o => !o.marked);
   drawScore();
-
-  frameCount++;
+  frame++;
   requestAnimationFrame(gameLoop);
 }
 
-// Controls
-
-function handleKeyDown(e) {
-  if (e.code === "Space" || e.code === "ArrowUp") {
-    player.jump();
-  }
-}
-
-function handleTouchStart() {
-  player.jump();
-}
-
-startBtn.addEventListener("click", () => {
-  if (!gameStarted) {
-    gameStarted = true;
-    sounds.start.play();
-    resetGame();
-  }
+window.addEventListener("keydown", e => {
+  if (e.code === "Space" || e.code === "ArrowUp") player.jump();
 });
 
-window.addEventListener("keydown", handleKeyDown);
-window.addEventListener("touchstart", handleTouchStart);
+canvas.addEventListener("touchstart", () => player.jump());
+canvas.addEventListener("click", () => {
+  if (gameOver) resetGame();
+});
+
+startBtn.onclick = () => {
+  resetGame();
+};
