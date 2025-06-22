@@ -1,10 +1,16 @@
-body, html 
-{
+@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&display=swap');
+
+* {
   margin: 0;
   padding: 0;
+  box-sizing: border-box;
+}
+
+body, html {
+  width: 100%;
   height: 100%;
-  font-family: "Cinzel Decorative", cursive;
   background: black;
+  font-family: 'Cinzel Decorative', cursive;
   overflow: hidden;
 }
 
@@ -12,50 +18,56 @@ body, html
   position: relative;
   width: 100vw;
   height: 100vh;
-  aspect-ratio: 16 / 9;
-  margin: 0 auto;
-  background: url('assets/images/bg.jpg') no-repeat center center/cover;
+  background: black;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 canvas {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-#ui {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  text-align: center;
-  z-index: 10;
+  border: 5px solid gold;
+  background-color: black;
+  aspect-ratio: 16 / 9;
+  width: 90vw;
+  height: auto;
+  max-height: 90vh;
 }
 
 #game-title {
-  font-size: 2.5em;
+  position: absolute;
+  top: 10%;
   color: gold;
-  text-shadow: 2px 2px 8px black;
-  margin-bottom: 20px;
+  text-align: center;
+  font-size: 2.5rem;
+  text-shadow: 2px 2px black;
 }
 
 #startBtn, #lets-shop, #muteBtn {
-  background-color: gold;
-  color: black;
-  font-weight: bold;
-  font-size: 1.2em;
+  position: absolute;
+  font-size: 1.2rem;
+  background: gold;
   border: none;
-  padding: 10px 25px;
-  margin: 10px;
-  border-radius: 10px;
+  padding: 10px 20px;
   cursor: pointer;
-  box-shadow: 2px 2px 10px black;
+  font-weight: bold;
+  font-family: inherit;
+  border-radius: 8px;
+  box-shadow: 0 0 10px #000;
+}
+
+#startBtn {
+  bottom: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+#lets-shop {
+  bottom: 10%;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 #muteBtn {
-  position: absolute;
-  bottom: 20px;
-  right: 20px;
-  padding: 10px;
-  font-size: 1.5em;
+  top: 5%;
+  right: 5%;
 }
