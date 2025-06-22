@@ -1,256 +1,218 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
-
-// Buttons
 const startBtn = document.getElementById("startBtn");
 const letsShopBtn = document.getElementById("lets-shop");
-const muteBtn = document.getElementById("muteBtn");
 const gameTitle = document.getElementById("game-title");
+const muteBtn = document.getElementById("muteBtn");
 
-let isMuted = false;
 let gameStarted = false;
 let gameOver = false;
+let isMuted = false;
 let score = 0;
 let frameCount = 0;
 let gameSpeed = 4;
-let gravity = 1.2;
+const gravity = 1.2;
 
-// 🔊 Sound setup
+// Resize canvas to match frame
+function resizeCanvas() {
+  const frame = document.getElementById("game-frame");
+  canvas.width = frame.clientWidth;
+  canvas.height = frame.clientHeight;
+}
+window.addEventListener("load", resizeCanvas);
+window.addEventListener("resize", resizeCanvas);
+
+// Sounds
 const sounds = {
   start: new Audio("assets/sound/start.mp3"),
   collect: new Audio("assets/sound/collect.ogg"),
   jump: new Audio("assets/sound/jump.wav"),
   death: new Audio("assets/sound/death.wav"),
+  message: new Audio("assets/sound/message.wav"),
   game: new Audio("assets/sound/game.wav"),
 };
-
 sounds.game.loop = true;
 
-function toggleMute() {
+function playSound(sound) {
+  if (!isMuted) {
+    sounds[sound].currentTime = 0;
+    sounds[sound].play();
+  }
+}
+
+muteBtn.addEventListener("click", () => {
   isMuted = !isMuted;
-  for (let key in sounds) {
-    sounds[key].muted = isMuted;
-  }
   muteBtn.textContent = isMuted ? "🔇" : "🔊";
-}
-muteBtn.addEventListener("click", toggleMute);
+  if (isMuted) sounds.game.pause();
+  else if (gameStarted) sounds.game.play();
+});
 
-// 🎮 Resize canvas inside frame
-function resizeCanvas() {
-  const frame = document.getElementById("game-frame");
-  if (!frame) return;
-  canvas.width = frame.clientWidth;
-  canvas.height = frame.clientHeight;
-}
-window.addEventListener("resize", resizeCanvas);
-window.addEventListener("load", resizeCanvas);
+// Background Looping
+const bgImage = new Image();
+bgImage.src = "assets/images/bg.jpg";
+let bgX = 0;
 
-// 🎞️ Sprite Sheet Animation Helper
-class SpriteAnimation {
-  constructor(imageSrc, frameCols, frameRows, speed = 5) {
-    this.image = new Image();
-    this.image.src = imageSrc;
-    this.cols = frameCols;
-    this.rows = frameRows;
-    this.speed = speed;
-    this.currentFrame = 0;
-    this.frameTimer = 0;
+// Character Sprite
+const spriteImage = new Image();
+spriteImage.src = "assets/player/run/sprite.png";
+const SPRITE_ROWS = 4;
+const SPRITE_COLS = 5;
+const SPRITE_WIDTH = 64;
+const SPRITE_HEIGHT = 64;
+const SCALE = 2;
 
-    this.frameWidth = 0;
-    this.frameHeight = 0;
+let currentFrame = 0;
+let frameTimer = 0;
+let frameSpeed = 6;
 
-    this.image.onload = () => {
-      this.frameWidth = this.image.width / this.cols;
-      this.frameHeight = this.image.height / this.rows;
-    };
-  }
-
-  update() {
-    this.frameTimer++;
-    if (this.frameTimer >= this.speed) {
-      this.currentFrame = (this.currentFrame + 1) % (this.cols * this.rows);
-      this.frameTimer = 0;
-    }
-  }
-
-  draw(ctx, x, y, scale = 2, flip = false) {
-    const col = this.currentFrame % this.cols;
-    const row = Math.floor(this.currentFrame / this.cols);
-    const fw = this.frameWidth;
-    const fh = this.frameHeight;
-
-    ctx.save();
-    if (flip) {
-      ctx.translate(x + fw * scale, y);
-      ctx.scale(-1, 1);
-      x = 0;
-    }
-    ctx.drawImage(
-      this.image,
-      col * fw,
-      row * fh,
-      fw,
-      fh,
-      x,
-      y,
-      fw * scale,
-      fh * scale
-    );
-    ctx.restore();
-  }
-}
-
-// 🧍 Player Class
 class Player {
   constructor() {
-    this.scale = 1.6;
-    this.x = 100;
-    this.y = 0;
+    this.width = SPRITE_WIDTH * SCALE;
+    this.height = SPRITE_HEIGHT * SCALE;
+    this.x = 80;
+    this.y = canvas.height - this.height - 40;
     this.dy = 0;
-    this.jumpPower = -20;
-    this.grounded = false;
-    this.state = "run";
-
-    this.animations = {
-      run: new SpriteAnimation("assets/player/run/sprite.png", 5, 4, 4),
-      jump: new SpriteAnimation("assets/player/jump/sprite.png", 6, 4, 4),
-      death: new SpriteAnimation("assets/player/death/sprite.png", 6, 5, 6),
-      idle: new SpriteAnimation("assets/player/idle/sprite.png", 4, 4, 6),
-    };
+    this.jumpPower = -18;
+    this.grounded = true;
   }
 
   update() {
     this.dy += gravity;
     this.y += this.dy;
 
-    const groundLevel = canvas.height - this.getHeight() - 40;
-    if (this.y >= groundLevel) {
-      this.y = groundLevel;
+    if (this.y + this.height >= canvas.height - 40) {
+      this.y = canvas.height - this.height - 40;
       this.dy = 0;
       this.grounded = true;
-      if (this.state === "jump") this.state = "run";
-    } else {
-      this.grounded = false;
     }
-  }
-
-  getWidth() {
-    const anim = this.animations[this.state];
-    return anim.frameWidth * this.scale;
-  }
-
-  getHeight() {
-    const anim = this.animations[this.state];
-    return anim.frameHeight * this.scale;
   }
 
   jump() {
     if (this.grounded) {
       this.dy = this.jumpPower;
-      this.state = "jump";
-      if (!isMuted) sounds.jump.play();
+      this.grounded = false;
+      playSound("jump");
     }
   }
 
   draw() {
-    const anim = this.animations[this.state];
-    anim.update();
-    anim.draw(ctx, this.x, this.y, this.scale, true); // Flipped to face right ➡️
+    frameTimer++;
+    if (frameTimer >= frameSpeed) {
+      currentFrame = (currentFrame + 1) % (SPRITE_ROWS * SPRITE_COLS);
+      frameTimer = 0;
+    }
+    const row = Math.floor(currentFrame / SPRITE_COLS);
+    const col = currentFrame % SPRITE_COLS;
+
+    ctx.save();
+    ctx.translate(this.x + this.width, this.y);
+    ctx.scale(-1, 1);
+    ctx.drawImage(
+      spriteImage,
+      col * SPRITE_WIDTH,
+      row * SPRITE_HEIGHT,
+      SPRITE_WIDTH,
+      SPRITE_HEIGHT,
+      0,
+      0,
+      this.width,
+      this.height
+    );
+    ctx.restore();
   }
 }
 
 class GameObject {
-  constructor(imgSrc, width, height, speed) {
+  constructor(imgSrc, width, height) {
     this.image = new Image();
     this.image.src = imgSrc;
     this.width = width;
     this.height = height;
-    this.x = canvas.width + Math.random() * 300 + 100;
+    this.x = canvas.width + Math.random() * 300 + 200;
     this.y = canvas.height - height - 40;
-    this.speed = speed;
-    this.markedForDeletion = false;
+    this.marked = false;
   }
 
   update() {
-    this.x -= this.speed;
-    if (this.x + this.width < 0) this.markedForDeletion = true;
+    this.x -= gameSpeed;
+    if (this.x + this.width < 0) this.marked = true;
   }
 
   draw() {
     ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
   }
 
-  collidesWith(player) {
+  collides(player) {
     return !(
       player.x > this.x + this.width ||
-      player.x + player.getWidth() < this.x ||
+      player.x + player.width < this.x ||
       player.y > this.y + this.height ||
-      player.y + player.getHeight() < this.y
+      player.y + player.height < this.y
     );
   }
 }
 
 const player = new Player();
+let collectibles = [];
+let obstacles = [];
 
-const collectibles = [];
-const obstacles = [];
-
-const collectibleImages = [
+const collectibleImgs = [
   "assets/images/dress.png",
-  "assets/images/handbag.png",
   "assets/images/heels.png",
+  "assets/images/handbag.png",
   "assets/images/earing.png",
 ];
-
-const obstacleImages = [
+const obstacleImgs = [
   "assets/images/obstacle_cart.png",
   "assets/images/obstacle_bag.png",
   "assets/images/obstacle_hanger.png",
 ];
 
 function spawnCollectible() {
-  const src = collectibleImages[Math.floor(Math.random() * collectibleImages.length)];
-  collectibles.push(new GameObject(src, 50, 50, gameSpeed));
+  const img = collectibleImgs[Math.floor(Math.random() * collectibleImgs.length)];
+  collectibles.push(new GameObject(img, 48, 48));
 }
 
 function spawnObstacle() {
-  const src = obstacleImages[Math.floor(Math.random() * obstacleImages.length)];
-  obstacles.push(new GameObject(src, 60, 60, gameSpeed));
+  const img = obstacleImgs[Math.floor(Math.random() * obstacleImgs.length)];
+  obstacles.push(new GameObject(img, 56, 56));
 }
 
 function drawScore() {
-  ctx.font = "24px Cinzel Decorative, cursive";
+  ctx.font = "20px Cinzel Decorative, cursive";
   ctx.fillStyle = "gold";
-  ctx.shadowColor = "black";
-  ctx.shadowBlur = 4;
   ctx.fillText(`Score: ${score}`, 20, 40);
 }
 
+function drawBackground() {
+  bgX -= gameSpeed * 0.5;
+  if (bgX <= -canvas.width) bgX = 0;
+  ctx.drawImage(bgImage, bgX, 0, canvas.width, canvas.height);
+  ctx.drawImage(bgImage, bgX + canvas.width, 0, canvas.width, canvas.height);
+}
+
 function drawGameOver() {
-  ctx.fillStyle = "rgba(0,0,0,0.6)";
+  ctx.fillStyle = "rgba(0,0,0,0.7)";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = "gold";
+  ctx.font = "32px Cinzel Decorative";
   ctx.textAlign = "center";
-  ctx.font = "bold 42px Cinzel Decorative";
-  ctx.fillText("Game Over", canvas.width / 2, canvas.height / 2 - 30);
-  ctx.font = "24px Cinzel Decorative";
-  ctx.fillText(`Score: ${score}`, canvas.width / 2, canvas.height / 2 + 10);
-  ctx.fillText("Tap to try again", canvas.width / 2, canvas.height / 2 + 50);
+  ctx.fillText("Game Over!", canvas.width / 2, canvas.height / 2 - 20);
+  ctx.font = "20px Cinzel Decorative";
+  ctx.fillText(`Score: ${score}`, canvas.width / 2, canvas.height / 2 + 20);
+  ctx.fillText("Tap or Press Start to Try Again", canvas.width / 2, canvas.height / 2 + 60);
 }
 
 function resetGame() {
-  score = 0;
-  gameSpeed = 4;
-  frameCount = 0;
-  player.y = canvas.height - player.getHeight() - 40;
-  player.dy = 0;
-  player.state = "run";
   gameOver = false;
-  collectibles.length = 0;
-  obstacles.length = 0;
-  sounds.game.currentTime = 0;
-  if (!isMuted) sounds.game.play();
-  gameLoop();
+  gameSpeed = 4;
+  score = 0;
+  collectibles = [];
+  obstacles = [];
+  player.y = canvas.height - player.height - 40;
+  player.dy = 0;
+  playSound("game");
+  requestAnimationFrame(gameLoop);
 }
 
 function gameLoop() {
@@ -261,61 +223,52 @@ function gameLoop() {
   }
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawBackground();
 
   player.update();
   player.draw();
 
-  if (frameCount % 130 === 0) spawnCollectible();
-  if (frameCount % 200 === 0) spawnObstacle();
+  // Spawn items
+  if (frameCount % 160 === 0) spawnCollectible();
+  if (frameCount % 220 === 0) spawnObstacle();
 
-  collectibles.forEach((item, i) => {
-    item.update();
-    item.draw();
-    if (item.collidesWith(player)) {
+  collectibles.forEach((c, i) => {
+    c.update();
+    c.draw();
+    if (c.collides(player)) {
       score += 10;
-      if (!isMuted) sounds.collect.play();
+      playSound("collect");
       collectibles.splice(i, 1);
     }
   });
 
-  obstacles.forEach((obs, i) => {
-    obs.update();
-    obs.draw();
-    if (obs.collidesWith(player)) {
-      player.state = "death";
+  obstacles.forEach((o, i) => {
+    o.update();
+    o.draw();
+    if (o.collides(player)) {
       gameOver = true;
-      if (!isMuted) sounds.death.play();
+      playSound("death");
     }
   });
 
-  collectibles.filter(obj => !obj.markedForDeletion);
-  obstacles.filter(obj => !obj.markedForDeletion);
-
-  if (frameCount % 500 === 0) gameSpeed += 0.3;
+  collectibles = collectibles.filter(c => !c.marked);
+  obstacles = obstacles.filter(o => !o.marked);
 
   drawScore();
-
   frameCount++;
   requestAnimationFrame(gameLoop);
 }
 
-// Input handling
-window.addEventListener("keydown", (e) => {
+// Controls
+window.addEventListener("keydown", e => {
   if (e.code === "Space" || e.code === "ArrowUp") player.jump();
 });
 window.addEventListener("touchstart", () => player.jump());
 
-canvas.addEventListener("click", () => {
-  if (gameOver) resetGame();
-});
-
 startBtn.addEventListener("click", () => {
   if (!gameStarted) {
     gameStarted = true;
-    resetGame();
-    if (!isMuted) sounds.start.play();
-    gameTitle.style.display = "none";
-    startBtn.style.display = "none";
-    letsShopBtn.style.display = "none";
+    playSound("start");
   }
+  resetGame();
 });
