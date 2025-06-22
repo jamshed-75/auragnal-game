@@ -4,70 +4,68 @@
   box-sizing: border-box;
 }
 
-body, html {
+html,
+body {
   width: 100%;
   height: 100%;
   overflow: hidden;
   font-family: 'Cinzel Decorative', cursive;
-  background: black;
 }
 
 #game-container {
   position: relative;
-  width: 100%;
+  width: 100vw;
   height: 100vh;
-  overflow: hidden;
   background: black;
 }
 
-#gameCanvas {
+canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
   display: block;
-  width: 100%;
-  height: 100%;
 }
 
 #game-title {
   position: absolute;
-  top: 8%;
-  width: 100%;
-  text-align: center;
-  font-size: 2rem;
+  top: 15%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 32px;
   color: gold;
+  text-shadow: 2px 2px black;
   z-index: 10;
 }
 
 #startBtn,
-#lets-shop {
+#lets-shop,
+#muteBtn {
   position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 14px 30px;
-  font-size: 1.2rem;
+  padding: 12px 24px;
+  font-size: 18px;
+  font-weight: bold;
   border: none;
-  border-radius: 12px;
-  background-color: gold;
+  border-radius: 8px;
+  background: gold;
   color: black;
   cursor: pointer;
   z-index: 10;
-  font-weight: bold;
+  box-shadow: 2px 2px 10px black;
 }
 
 #startBtn {
-  bottom: 22%;
+  bottom: 20%;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 #lets-shop {
-  bottom: 12%;
+  bottom: 10%;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 #muteBtn {
-  position: absolute;
   top: 10px;
   right: 10px;
-  z-index: 15;
-  background: transparent;
-  border: none;
-  font-size: 1.5rem;
-  color: gold;
-  cursor: pointer;
 }
