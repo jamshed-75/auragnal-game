@@ -1,10 +1,14 @@
 {
+  box-sizing: border-box;
+}
+
+html, body {
   margin: 0;
   padding: 0;
-  overflow: hidden;
-  height: 100%;
-  background-color: black;
+  background: black;
   font-family: 'Cinzel Decorative', cursive;
+  height: 100%;
+  overflow: hidden;
 }
 
 #game-container {
@@ -15,52 +19,43 @@
   justify-content: center;
   align-items: center;
   flex-direction: column;
-  overflow: hidden;
 }
 
 canvas {
-  border: 4px solid gold;
-  background-color: #000;
+  border: 5px solid gold;
+  width: 100%;
+  height: auto;
+  max-height: 80vh;
   display: block;
 }
 
 #game-title {
-  position: absolute;
-  top: 20px;
+  color: gold;
   font-size: 32px;
-  color: gold;
+  margin-bottom: 10px;
+  text-shadow: 2px 2px 5px black;
   text-align: center;
-  text-shadow: 2px 2px black;
 }
 
-button {
-  position: absolute;
+#startBtn,
+#lets-shop,
+#muteBtn {
+  margin: 6px;
   padding: 12px 20px;
-  font-size: 18px;
-  border: none;
-  cursor: pointer;
-  font-family: inherit;
-  background-color: gold;
+  background: gold;
   color: black;
+  border: none;
   border-radius: 8px;
-  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.4);
-  transition: 0.3s ease;
+  font-weight: bold;
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.3s;
 }
 
-#startBtn {
-  bottom: 80px;
-}
-
-#lets-shop {
-  bottom: 30px;
-}
-
-#mute-btn {
-  top: 20px;
-  right: 20px;
+#muteBtn {
   position: absolute;
+  top: 10px;
+  right: 10px;
   font-size: 20px;
-  padding: 8px;
-  background-color: transparent;
-  color: gold;
+  z-index: 99;
 }
