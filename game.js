@@ -1,10 +1,9 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
-
-const CANVAS_WIDTH = 960;
-const CANVAS_HEIGHT = 540;
-canvas.width = CANVAS_WIDTH;
-canvas.height = CANVAS_HEIGHT;
+const startBtn = document.getElementById("startBtn");
+const letsShopBtn = document.getElementById("lets-shop");
+const gameTitle = document.getElementById("game-title");
+const muteBtn = document.getElementById("muteBtn");
 
 let gameStarted = false;
 let gameOver = false;
@@ -13,6 +12,11 @@ let score = 0;
 let frameCount = 0;
 let gameSpeed = 4;
 const gravity = 1.2;
+
+const CANVAS_WIDTH = 960;
+const CANVAS_HEIGHT = 540;
+canvas.width = CANVAS_WIDTH;
+canvas.height = CANVAS_HEIGHT;
 
 // Sounds
 const sounds = {
@@ -24,60 +28,54 @@ const sounds = {
 };
 sounds.game.loop = true;
 
-function playSound(name) {
+function playSound(sound) {
   if (!isMuted) {
-    sounds[name].currentTime = 0;
-    sounds[name].play();
+    sounds[sound].currentTime = 0;
+    sounds[sound].play();
   }
 }
 
+muteBtn.addEventListener("click", () => {
+  isMuted = !isMuted;
+  muteBtn.textContent = isMuted ? "🔇" : "🔊";
+  if (isMuted) sounds.game.pause();
+  else if (gameStarted) sounds.game.play();
+});
+
 // Background
 const bgImage = new Image();
-bgImage.src = "assets/images/bg_long.jpg"; // your new 6120x1440 image
+bgImage.src = "assets/images/bg_long.jpg";
 let bgX = 0;
 
-function drawBackground() {
-  bgX -= gameSpeed * 0.5;
-  if (bgX <= -bgImage.width) bgX = 0;
-
-  ctx.drawImage(bgImage, bgX, 0, bgImage.width, CANVAS_HEIGHT);
-  ctx.drawImage(bgImage, bgX + bgImage.width, 0, bgImage.width, CANVAS_HEIGHT);
-}
-
-// Cart images
-const cartImages = {
-  empty: loadImage("assets/cart/cart_empty.png"),
-  partial: loadImage("assets/cart/cart_partial.png"),
-  full: loadImage("assets/cart/cart_full.png"),
-  broken: loadImage("assets/cart/cart_broken.png"),
-};
-
-function loadImage(src) {
+// Cart Frames
+const cartFrames = [
+  "cart_empty.png",
+  "cart_partial.png",
+  "cart_full.png",
+  "cart_broken.png"
+].map(name => {
   const img = new Image();
-  img.src = src;
+  img.src = `assets/cart/${name}`;
   return img;
-}
+});
 
 class Player {
   constructor() {
-    this.state = "empty";
-    this.width = 100;
-    this.height = 80;
-    this.scale = 1.2;
+    this.scale = 0.5;
     this.x = 80;
-    this.y = CANVAS_HEIGHT - this.height * this.scale - 40;
+    this.y = CANVAS_HEIGHT - 140;
     this.dy = 0;
     this.jumpPower = -18;
     this.grounded = true;
-    this.hit = false;
+    this.isDead = false;
   }
 
   update() {
     this.dy += gravity;
     this.y += this.dy;
 
-    if (this.y + this.height * this.scale >= CANVAS_HEIGHT - 40) {
-      this.y = CANVAS_HEIGHT - this.height * this.scale - 40;
+    if (this.y + 100 >= CANVAS_HEIGHT - 40) {
+      this.y = CANVAS_HEIGHT - 100 - 40;
       this.dy = 0;
       this.grounded = true;
     } else {
@@ -86,28 +84,27 @@ class Player {
   }
 
   jump() {
-    if (this.grounded && !this.hit) {
+    if (this.grounded && !this.isDead) {
       this.dy = this.jumpPower;
       this.grounded = false;
       playSound("jump");
     }
   }
 
-  draw() {
-    const img = cartImages[this.state];
-    if (img.complete) {
-      ctx.drawImage(
-        img,
-        this.x,
-        this.y,
-        this.width * this.scale,
-        this.height * this.scale
-      );
-    }
+  die() {
+    this.isDead = true;
   }
 
-  resetState() {
-    this.state = "empty";
+  draw() {
+    let img;
+    if (this.isDead) img = cartFrames[3];
+    else if (score >= 60) img = cartFrames[2];
+    else if (score >= 30) img = cartFrames[1];
+    else img = cartFrames[0];
+
+    if (img.complete) {
+      ctx.drawImage(img, this.x, this.y, img.width * this.scale, img.height * this.scale);
+    }
   }
 }
 
@@ -132,16 +129,19 @@ class GameObject {
   }
 
   collides(player) {
-    return !(
-      player.x + player.width * player.scale < this.x ||
-      player.x > this.x + this.width ||
-      player.y + player.height * player.scale < this.y ||
-      player.y > this.y + this.height
+    const px = player.x;
+    const py = player.y;
+    const pw = 80;
+    const ph = 80;
+    return (
+      px < this.x + this.width &&
+      px + pw > this.x &&
+      py < this.y + this.height &&
+      py + ph > this.y
     );
   }
 }
 
-// Game Setup
 const player = new Player();
 let collectibles = [];
 let obstacles = [];
@@ -153,24 +153,32 @@ const collectibleImgs = [
   "assets/images/earing.png",
 ];
 const obstacleImgs = [
-  "assets/images/obstacle_rock.png",
-  "assets/images/obstacle_hump.png",
+  "assets/images/obstacle_cart.png",
+  "assets/images/obstacle_bag.png",
+  "assets/images/obstacle_hanger.png",
 ];
 
 function spawnCollectible() {
   const img = collectibleImgs[Math.floor(Math.random() * collectibleImgs.length)];
-  collectibles.push(new GameObject(img, 40, 40));
+  collectibles.push(new GameObject(img, 36, 36));
 }
 
 function spawnObstacle() {
   const img = obstacleImgs[Math.floor(Math.random() * obstacleImgs.length)];
-  obstacles.push(new GameObject(img, 40, 40));
+  obstacles.push(new GameObject(img, 42, 42));
 }
 
 function drawScore() {
-  ctx.font = "20px Cinzel Decorative";
+  ctx.font = "20px Cinzel Decorative, cursive";
   ctx.fillStyle = "#588749";
-  ctx.fillText(`Score: ${score}`, 30, 40);
+  ctx.fillText(`Score: ${score}`, 40, 40);
+}
+
+function drawBackground() {
+  bgX -= gameSpeed * 0.5;
+  if (bgX <= -CANVAS_WIDTH) bgX = 0;
+  ctx.drawImage(bgImage, bgX, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+  ctx.drawImage(bgImage, bgX + CANVAS_WIDTH, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 }
 
 function drawGameOver() {
@@ -191,8 +199,9 @@ function resetGame() {
   score = 0;
   collectibles = [];
   obstacles = [];
-  player.resetState();
-  player.hit = false;
+  player.y = CANVAS_HEIGHT - 100 - 40;
+  player.dy = 0;
+  player.isDead = false;
   playSound("game");
   requestAnimationFrame(gameLoop);
 }
@@ -210,7 +219,7 @@ function gameLoop() {
   player.update();
   player.draw();
 
-  if (frameCount % 140 === 0) spawnCollectible();
+  if (frameCount % 160 === 0) spawnCollectible();
   if (frameCount % 220 === 0) spawnObstacle();
 
   collectibles.forEach((c, i) => {
@@ -218,11 +227,6 @@ function gameLoop() {
     c.draw();
     if (c.collides(player)) {
       score += 10;
-      if (score >= 50 && score % 50 === 0) gameSpeed += 0.5;
-
-      if (score < 30) player.state = "partial";
-      else player.state = "full";
-
       playSound("collect");
       collectibles.splice(i, 1);
     }
@@ -231,41 +235,22 @@ function gameLoop() {
   obstacles.forEach((o, i) => {
     o.update();
     o.draw();
-    if (o.collides(player) && !player.hit) {
-      player.state = "broken";
-      player.hit = true;
+    if (o.collides(player) && !player.isDead) {
+      player.die();
       playSound("death");
-      setTimeout(() => (gameOver = true), 1000);
+      setTimeout(() => {
+        gameOver = true;
+      }, 1000);
     }
   });
 
-  collectibles = collectibles.filter((c) => !c.marked);
-  obstacles = obstacles.filter((o) => !o.marked);
+  collectibles = collectibles.filter(c => !c.marked);
+  obstacles = obstacles.filter(o => !o.marked);
 
   drawScore();
   frameCount++;
   requestAnimationFrame(gameLoop);
 }
-
-// Events
-document.getElementById("startBtn").addEventListener("click", () => {
-  if (!gameStarted) {
-    gameStarted = true;
-    playSound("start");
-  }
-  resetGame();
-});
-
-document.getElementById("lets-shop").addEventListener("click", () => {
-  window.location.href = "https://auragnal.com";
-});
-
-document.getElementById("muteBtn").addEventListener("click", () => {
-  isMuted = !isMuted;
-  document.getElementById("muteBtn").textContent = isMuted ? "🔇" : "🔊";
-  if (isMuted) sounds.game.pause();
-  else if (gameStarted) sounds.game.play();
-});
 
 window.addEventListener("keydown", (e) => {
   if (["Space", "ArrowUp", "KeyW"].includes(e.code)) {
@@ -278,5 +263,20 @@ window.addEventListener("touchstart", () => {
   if (gameOver) resetGame();
   else player.jump();
 });
-ctx.fillStyle = "red";
-ctx.fillRect(50, 50, 100, 100);
+
+window.addEventListener("mousedown", () => {
+  if (gameOver) resetGame();
+  else player.jump();
+});
+
+startBtn.addEventListener("click", () => {
+  if (!gameStarted) {
+    gameStarted = true;
+    playSound("start");
+  }
+  resetGame();
+});
+
+letsShopBtn.addEventListener("click", () => {
+  window.location.href = "https://auragnal.com";
+});
