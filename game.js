@@ -44,7 +44,7 @@ muteBtn.addEventListener("click", () => {
 
 // Background
 const bgImage = new Image();
-bgImage.src = "assets/images/bg_long.jpg";
+bgImage.src = "assets/images/mall_background_6120x1440.png";
 let bgX = 0;
 
 // Cart Frames
