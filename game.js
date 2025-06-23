@@ -229,9 +229,11 @@ function gameLoop() {
   player.update();
   player.draw();
 
+  // Spawn logic
   if (frameCount % 160 === 0) spawnCollectible();
   if (frameCount % 220 === 0) spawnObstacle();
 
+  // Update & draw collectibles
   collectibles.forEach((c, i) => {
     c.update();
     c.draw();
@@ -242,6 +244,7 @@ function gameLoop() {
     }
   });
 
+  // Update & draw obstacles
   obstacles.forEach((o, i) => {
     o.update();
     o.draw();
@@ -250,7 +253,7 @@ function gameLoop() {
       playSound("death");
       setTimeout(() => {
         gameOver = true;
-      }, 800);
+      }, 1000);
     }
   });
 
@@ -259,7 +262,7 @@ function gameLoop() {
 
   drawScore();
   frameCount++;
-  requestAnimationFrame(gameLoop);
+  requestAnimationFrame(gameLoop); // ✅ Loop continues
 }
 
 // Controls
