@@ -66,9 +66,9 @@ function loadFrames(folder, frameCount, prefix) {
 
 class Player {
   constructor() {
-    this.frameWidth = 64;
-    this.frameHeight = 64;
-    this.scale = 2;
+    this.frameWidth = 48;  // smaller frame size
+    this.frameHeight = 48;
+    this.scale = 2.5;      // scaled slightly bigger than objects
     this.x = 80;
     this.y = CANVAS_HEIGHT - this.frameHeight * this.scale - 40;
     this.dy = 0;
@@ -76,7 +76,6 @@ class Player {
     this.grounded = true;
     this.isDead = false;
 
-    // Load frames for each animation
     this.animations = {
       run: loadFrames("run", 4, "run"),
       jump: loadFrames("jump", 4, "jump"),
@@ -87,7 +86,7 @@ class Player {
     this.currentAnimation = "run";
     this.currentFrame = 0;
     this.frameTimer = 0;
-    this.frameSpeed = 10; // frames to wait before switching frame
+    this.frameSpeed = 10;
   }
 
   update() {
@@ -217,7 +216,7 @@ function spawnObstacle() {
 function drawScore() {
   ctx.font = "20px Cinzel Decorative, cursive";
   ctx.fillStyle = "#588749";
-  ctx.fillText(`Score: ${score}`, 20, 40);
+  ctx.fillText(`Score: ${score}`, 40, 40); // moved 20px right for full visibility
 }
 
 function drawBackground() {
@@ -298,31 +297,22 @@ function gameLoop() {
   requestAnimationFrame(gameLoop);
 }
 
-// Controls: jump and tap to restart game
+// Controls: jump and tap to restart game anywhere on window
 window.addEventListener("keydown", (e) => {
   if (e.code === "Space" || e.code === "ArrowUp") {
-    if (gameOver) {
-      resetGame();
-    } else {
-      player.jump();
-    }
+    if (gameOver) resetGame();
+    else player.jump();
   }
 });
 
-canvas.addEventListener("touchstart", () => {
-  if (gameOver) {
-    resetGame();
-  } else {
-    player.jump();
-  }
+window.addEventListener("touchstart", () => {
+  if (gameOver) resetGame();
+  else player.jump();
 });
 
-canvas.addEventListener("mousedown", () => {
-  if (gameOver) {
-    resetGame();
-  } else {
-    player.jump();
-  }
+window.addEventListener("mousedown", () => {
+  if (gameOver) resetGame();
+  else player.jump();
 });
 
 // Start button
