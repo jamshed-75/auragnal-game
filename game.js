@@ -72,7 +72,7 @@ class Player {
     this.x = 80;
     this.y = CANVAS_HEIGHT - this.frameHeight * this.scale - 40;
     this.dy = 0;
-    this.jumpPower = -18;
+    this.jumpPower = -22:
     this.grounded = true;
     this.isDead = false;
 
@@ -137,26 +137,21 @@ class Player {
   }
 
   draw() {
-    const img = this.animations[this.currentAnimation][this.currentFrame];
-    if (!img.complete) return;
+  const img = this.animations[this.currentAnimation][this.currentFrame];
+  if (!img.complete) return;
 
-    ctx.save();
-    ctx.translate(this.x + this.frameWidth * this.scale, this.y);
-    ctx.scale(-1, 1); // Flip to face ➡️
-    ctx.drawImage(
-      img,
-      0,
-      0,
-      this.frameWidth,
-      this.frameHeight,
-      0,
-      0,
-      this.frameWidth * this.scale,
-      this.frameHeight * this.scale
-    );
-    ctx.restore();
+  ctx.drawImage(
+    img,
+    0,
+    0,
+    this.frameWidth,
+    this.frameHeight,
+    this.x,
+    this.y,
+    this.frameWidth * this.scale,
+    this.frameHeight * this.scale
+  );
   }
-}
 
 class GameObject {
   constructor(imgSrc, width, height) {
