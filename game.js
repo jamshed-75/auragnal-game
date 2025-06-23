@@ -63,9 +63,9 @@ function loadFrames(folder, count, prefix) {
 
 class Player {
   constructor() {
-    this.frameWidth = 117; // adjust to match your actual frame size
+    this.frameWidth = 117;
     this.frameHeight = 296;
-    this.scale = 0.35; // scales character to a proper size
+    this.scale = 0.35;
     this.x = 80;
     this.y = CANVAS_HEIGHT - this.frameHeight * this.scale - 40;
     this.dy = 0;
@@ -152,41 +152,7 @@ class Player {
     );
   }
 }
-class GameObject {
-  constructor(imgSrc, width, height) {
-    this.image = new Image();
-    this.image.src = imgSrc;
-    this.width = width;
-    this.height = height;
-    this.x = CANVAS_WIDTH + Math.random() * 300 + 300;
-    this.y = CANVAS_HEIGHT - height - 40;
-    this.marked = false;
-  }
 
-  update() {
-    this.x -= gameSpeed;
-    if (this.x + this.width < 0) this.marked = true;
-  }
-
- draw() {
-  const img = this.animations[this.currentAnimation][this.currentFrame];
-  if (!img.complete) return;
-
-  // Adjust scale and direction
-  const drawWidth = this.frameWidth * this.scale;
-  const drawHeight = this.frameHeight * this.scale;
-
-  ctx.drawImage(
-    img,
-    0, 0,
-    this.frameWidth,
-    this.frameHeight,
-    this.x,
-    this.y,
-    drawWidth,
-    drawHeight
-  );
-}
 const player = new Player();
 let collectibles = [];
 let obstacles = [];
