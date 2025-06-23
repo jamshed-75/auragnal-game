@@ -63,13 +63,13 @@ function loadFrames(folder, count, prefix) {
 
 class Player {
   constructor() {
-    this.frameWidth = 117;  // or actual width of frame
-    this.frameHeight = 296; // or actual height
-    this.scale = 0.35;      // Adjust this if character looks too big
+    this.frameWidth = 117; // adjust to match your actual frame size
+    this.frameHeight = 296;
+    this.scale = 0.35; // scales character to a proper size
     this.x = 80;
     this.y = CANVAS_HEIGHT - this.frameHeight * this.scale - 40;
     this.dy = 0;
-    this.jumpPower = -28;
+    this.jumpPower = -20;
     this.grounded = true;
     this.isDead = false;
 
@@ -87,9 +87,13 @@ class Player {
   }
 
   update() {
-    if (this.isDead) this.currentAnimation = "death";
-    else if (!this.grounded) this.currentAnimation = "jump";
-    else this.currentAnimation = "run";
+    if (this.isDead) {
+      this.currentAnimation = "death";
+    } else if (!this.grounded) {
+      this.currentAnimation = "jump";
+    } else {
+      this.currentAnimation = "run";
+    }
 
     this.dy += gravity;
     this.y += this.dy;
@@ -106,9 +110,11 @@ class Player {
     if (this.frameTimer >= this.frameSpeed) {
       this.currentFrame++;
       if (this.currentFrame >= this.animations[this.currentAnimation].length) {
-        this.currentFrame = this.currentAnimation === "death"
-          ? this.animations["death"].length - 1
-          : 0;
+        if (this.currentAnimation === "death") {
+          this.currentFrame = this.animations["death"].length - 1;
+        } else {
+          this.currentFrame = 0;
+        }
       }
       this.frameTimer = 0;
     }
@@ -131,20 +137,21 @@ class Player {
     const img = this.animations[this.currentAnimation][this.currentFrame];
     if (!img.complete) return;
 
+    const drawWidth = this.frameWidth * this.scale;
+    const drawHeight = this.frameHeight * this.scale;
+
     ctx.drawImage(
       img,
-      0,
-      0,
+      0, 0,
       this.frameWidth,
       this.frameHeight,
       this.x,
       this.y,
-      this.frameWidth * this.scale,
-      this.frameHeight * this.scale
+      drawWidth,
+      drawHeight
     );
   }
 }
-
 class GameObject {
   constructor(imgSrc, width, height) {
     this.image = new Image();
