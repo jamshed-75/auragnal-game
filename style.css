@@ -4,7 +4,7 @@
   box-sizing: border-box;
 }
 
-{
+body {
   font-family: 'Cinzel Decorative', cursive;
   background-color: #000;
   color: #588749;
@@ -13,16 +13,20 @@
   align-items: center;
   justify-content: flex-start;
   height: 100vh;
-  overflow: hidden;
   padding: 20px 0;
 }
 
 #game-title {
-  margin-bottom: 12px;
   font-size: 2.5rem;
-  text-align: center;
+  margin-bottom: 16px;
   color: #588749;
   text-shadow: 2px 2px 8px black;
+}
+
+#game-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 #mute-container {
