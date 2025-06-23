@@ -1,218 +1,332 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
+const startBtn = document.getElementById("startBtn");
+const letsShopBtn = document.getElementById("lets-shop");
+const gameTitle = document.getElementById("game-title");
+const muteBtn = document.getElementById("muteBtn");
 
-let gameRunning = false;
-let muted = false;
+let gameStarted = false;
 let gameOver = false;
-let bgX = 0;
-let restartTimeout;
+let isMuted = false;
+let score = 0;
+let frameCount = 0;
+let gameSpeed = 4;
+const gravity = 1.2;
 
-const background = new Image();
-background.src = "assets/images/bg.jpg";
+const CANVAS_WIDTH = 960;
+const CANVAS_HEIGHT = 540;
+
+function setupCanvas() {
+  canvas.width = CANVAS_WIDTH;
+  canvas.height = CANVAS_HEIGHT;
+}
+setupCanvas();
 
 const sounds = {
   start: new Audio("assets/sound/start.mp3"),
-  jump: new Audio("assets/sound/jump.wav"),
-  game: new Audio("assets/sound/game.wav"),
-  death: new Audio("assets/sound/death.wav"),
   collect: new Audio("assets/sound/collect.ogg"),
+  jump: new Audio("assets/sound/jump.wav"),
+  death: new Audio("assets/sound/death.wav"),
+  message: new Audio("assets/sound/message.wav"),
+  game: new Audio("assets/sound/game.wav"),
 };
+sounds.game.loop = true;
 
-Object.values(sounds).forEach((s) => s.volume = 0.5);
+function playSound(sound) {
+  if (!isMuted) {
+    sounds[sound].currentTime = 0;
+    sounds[sound].play();
+  }
+}
 
-function loadImage(src) {
-  const img = new Image();
-  img.src = src;
-  return img;
+muteBtn.addEventListener("click", () => {
+  isMuted = !isMuted;
+  muteBtn.textContent = isMuted ? "🔇" : "🔊";
+  if (isMuted) sounds.game.pause();
+  else if (gameStarted) sounds.game.play();
+});
+
+const bgImage = new Image();
+bgImage.src = "assets/images/bg.jpg";
+let bgX = 0;
+
+function loadFrames(folder, count, prefix) {
+  const frames = [];
+  for (let i = 1; i <= count; i++) {
+    const img = new Image();
+    img.src = `assets/player/${folder}/${prefix}${i}.png`;
+    frames.push(img);
+  }
+  return frames;
 }
 
 class Player {
   constructor() {
+    this.frameWidth = 56;
+    this.frameHeight = 56;
+    this.scale = 2.0;
     this.x = 80;
-    this.y = 0;
-    this.width = 80;
-    this.height = 120;
-    this.vy = 0;
-    this.gravity = 0.8;
-    this.jumpForce = -14;
-    this.grounded = false;
-    this.frameIndex = 0;
-    this.frameSpeed = 0.2;
-    this.frames = [
-      loadImage("assets/player/run/run1.png"),
-      loadImage("assets/player/run/run2.png"),
-      loadImage("assets/player/run/run3.png"),
-      loadImage("assets/player/run/run4.png"),
-    ];
+    this.y = CANVAS_HEIGHT - this.frameHeight * this.scale - 40;
+    this.dy = 0;
+    this.jumpPower = -18;
+    this.grounded = true;
+    this.isDead = false;
+
+    this.animations = {
+      run: loadFrames("run", 4, "run"),
+      jump: loadFrames("jump", 4, "jump"),
+      death: loadFrames("death", 2, "death"),
+      idle: loadFrames("idle", 3, "idle"),
+    };
+
+    this.currentAnimation = "run";
+    this.currentFrame = 0;
+    this.frameTimer = 0;
+    this.frameSpeed = 10;
+  }
+
+  update() {
+    if (this.isDead) {
+      this.currentAnimation = "death";
+    } else if (!this.grounded) {
+      this.currentAnimation = "jump";
+    } else {
+      this.currentAnimation = "run";
+    }
+
+    this.dy += gravity;
+    this.y += this.dy;
+
+    if (this.y + this.frameHeight * this.scale >= CANVAS_HEIGHT - 40) {
+      this.y = CANVAS_HEIGHT - this.frameHeight * this.scale - 40;
+      this.dy = 0;
+      this.grounded = true;
+    } else {
+      this.grounded = false;
+    }
+
+    this.frameTimer++;
+    if (this.frameTimer >= this.frameSpeed) {
+      this.currentFrame++;
+      if (this.currentFrame >= this.animations[this.currentAnimation].length) {
+        if (this.currentAnimation === "death") {
+          this.currentFrame = this.animations["death"].length - 1;
+        } else {
+          this.currentFrame = 0;
+        }
+      }
+      this.frameTimer = 0;
+    }
   }
 
   jump() {
-    if (this.grounded) {
-      this.vy = this.jumpForce;
+    if (this.grounded && !this.isDead) {
+      this.dy = this.jumpPower;
       this.grounded = false;
       playSound("jump");
     }
   }
 
-  update() {
-    this.vy += this.gravity;
-    this.y += this.vy;
-
-    if (this.y + this.height >= canvas.height - 40) {
-      this.y = canvas.height - this.height - 40;
-      this.vy = 0;
-      this.grounded = true;
-    }
-
-    this.frameIndex += this.frameSpeed;
-    if (this.frameIndex >= this.frames.length) this.frameIndex = 0;
+  die() {
+    this.isDead = true;
+    this.currentFrame = 0;
   }
 
   draw() {
-    const frame = this.frames[Math.floor(this.frameIndex)];
-    ctx.drawImage(frame, this.x, this.y, this.width, this.height);
+    const img = this.animations[this.currentAnimation][this.currentFrame];
+    if (!img.complete) return;
+    ctx.save();
+    ctx.translate(this.x + this.frameWidth * this.scale, this.y);
+    ctx.scale(-1, 1);
+    ctx.drawImage(
+      img,
+      0,
+      0,
+      this.frameWidth,
+      this.frameHeight,
+      0,
+      0,
+      this.frameWidth * this.scale,
+      this.frameHeight * this.scale
+    );
+    ctx.restore();
   }
 
   getBounds() {
-    return { x: this.x, y: this.y, width: this.width, height: this.height };
+    return {
+      x: this.x + 15,
+      y: this.y + 12,
+      width: this.frameWidth * this.scale - 30,
+      height: this.frameHeight * this.scale - 24,
+    };
   }
 }
 
 class GameObject {
-  constructor(imagePath, speed, isObstacle = true) {
-    this.image = loadImage(imagePath);
-    this.width = 50;
-    this.height = 50;
-    this.x = canvas.width;
-    this.y = canvas.height - this.height - 40;
-    this.speed = speed;
-    this.isObstacle = isObstacle;
+  constructor(imgSrc, width, height) {
+    this.image = new Image();
+    this.image.src = imgSrc;
+    this.width = width;
+    this.height = height;
+    this.x = CANVAS_WIDTH + Math.random() * 300 + 200;
+    this.y = CANVAS_HEIGHT - height - 40;
+    this.marked = false;
   }
 
   update() {
-    this.x -= this.speed;
+    this.x -= gameSpeed;
+    if (this.x + this.width < 0) this.marked = true;
   }
 
   draw() {
     ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
   }
 
-  getBounds() {
-    return { x: this.x, y: this.y, width: this.width, height: this.height };
+  collides(player) {
+    const a = this;
+    const b = player.getBounds();
+    return !(
+      b.x > a.x + a.width ||
+      b.x + b.width < a.x ||
+      b.y > a.y + a.height ||
+      b.y + b.height < a.y
+    );
   }
 }
 
-let player = new Player();
-let objects = [];
+const player = new Player();
+let collectibles = [];
+let obstacles = [];
 
-function spawnObject() {
-  if (!gameRunning) return;
-  const isObstacle = Math.random() > 0.5;
-  const files = isObstacle
-    ? ["obstacle_bag.png", "obstacle_cart.png"]
-    : ["dress.png", "handbag.png", "earing.png"];
-  const img = files[Math.floor(Math.random() * files.length)];
-  const path = `assets/images/${img}`;
-  objects.push(new GameObject(path, 5, isObstacle));
+const collectibleImgs = [
+  "assets/images/dress.png",
+  "assets/images/heels.png",
+  "assets/images/handbag.png",
+  "assets/images/earing.png",
+];
+const obstacleImgs = [
+  "assets/images/obstacle_cart.png",
+  "assets/images/obstacle_bag.png",
+  "assets/images/obstacle_hanger.png",
+];
+
+function spawnCollectible() {
+  const img = collectibleImgs[Math.floor(Math.random() * collectibleImgs.length)];
+  collectibles.push(new GameObject(img, 48, 48));
 }
 
-function playSound(name) {
-  if (!muted && sounds[name]) {
-    sounds[name].currentTime = 0;
-    sounds[name].play();
-  }
+function spawnObstacle() {
+  const img = obstacleImgs[Math.floor(Math.random() * obstacleImgs.length)];
+  obstacles.push(new GameObject(img, 56, 56));
 }
 
-function toggleMute() {
-  muted = !muted;
-  document.getElementById("muteBtn").textContent = muted ? "🔇" : "🔊";
-  Object.values(sounds).forEach((s) => (s.muted = muted));
+function drawScore() {
+  ctx.font = "20px Cinzel Decorative, cursive";
+  ctx.fillStyle = "#588749";
+  ctx.fillText(`Score: ${score}`, 40, 40);
 }
 
-document.getElementById("muteBtn").addEventListener("click", toggleMute);
+function drawBackground() {
+  bgX -= gameSpeed * 0.5;
+  if (bgX <= -CANVAS_WIDTH) bgX = 0;
+  ctx.drawImage(bgImage, bgX, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+  ctx.drawImage(bgImage, bgX + CANVAS_WIDTH, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+}
 
-function startGame() {
-  gameRunning = true;
+function drawGameOver() {
+  ctx.fillStyle = "rgba(0,0,0,0.7)";
+  ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+  ctx.fillStyle = "#588749";
+  ctx.font = "32px Cinzel Decorative";
+  ctx.textAlign = "center";
+  ctx.fillText("Game Over!", CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 20);
+  ctx.font = "20px Cinzel Decorative";
+  ctx.fillText(`Score: ${score}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 20);
+  ctx.fillText("Tap or Press Start to Try Again", CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 60);
+}
+
+function resetGame() {
   gameOver = false;
-  player = new Player();
-  objects = [];
-  bgX = 0;
-  playSound("start");
-  clearTimeout(restartTimeout);
+  gameSpeed = 4;
+  score = 0;
+  collectibles = [];
+  obstacles = [];
+  player.y = CANVAS_HEIGHT - player.frameHeight * player.scale - 40;
+  player.dy = 0;
+  player.isDead = false;
+  playSound("game");
   requestAnimationFrame(gameLoop);
-  setInterval(spawnObject, 2000);
 }
-
-document.getElementById("startBtn").addEventListener("click", startGame);
-
-document.getElementById("lets-shop").addEventListener("click", () => {
-  window.location.href = "https://auragnal.com";
-});
-
-window.addEventListener("keydown", (e) => {
-  if (e.code === "Space") player.jump();
-});
-
-canvas.addEventListener("click", () => {
-  if (gameOver) startGame();
-  else player.jump();
-});
 
 function gameLoop() {
-  if (!gameRunning) return;
+  if (gameOver) {
+    drawGameOver();
+    sounds.game.pause();
+    return;
+  }
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  // Background scroll
-  bgX -= 2;
-  if (bgX <= -canvas.width) bgX = 0;
-  ctx.drawImage(background, bgX, 0, canvas.width, canvas.height);
-  ctx.drawImage(background, bgX + canvas.width, 0, canvas.width, canvas.height);
+  ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+  drawBackground();
 
   player.update();
   player.draw();
 
-  objects.forEach((obj) => {
-    obj.update();
-    obj.draw();
+  if (frameCount % 160 === 0) spawnCollectible();
+  if (frameCount % 220 === 0) spawnObstacle();
+
+  collectibles.forEach((c, i) => {
+    c.update();
+    c.draw();
+    if (c.collides(player)) {
+      score += 10;
+      playSound("collect");
+      collectibles.splice(i, 1);
+    }
   });
 
-  const playerBounds = player.getBounds();
-
-  for (const obj of objects) {
-    const o = obj.getBounds();
-    if (
-      playerBounds.x < o.x + o.width &&
-      playerBounds.x + playerBounds.width > o.x &&
-      playerBounds.y < o.y + o.height &&
-      playerBounds.y + playerBounds.height > o.y
-    ) {
-      if (obj.isObstacle) {
-        playSound("death");
-        gameRunning = false;
+  obstacles.forEach((o, i) => {
+    o.update();
+    o.draw();
+    if (o.collides(player) && !player.isDead) {
+      player.die();
+      playSound("death");
+      setTimeout(() => {
         gameOver = true;
-        ctx.fillStyle = "#fff";
-        ctx.font = "30px Arial";
-        ctx.fillText("Tap to Restart", canvas.width / 2 - 100, canvas.height / 2);
-        return;
-      } else {
-        playSound("collect");
-        objects.splice(objects.indexOf(obj), 1);
-      }
+      }, 1000);
     }
-  }
+  });
 
-  objects = objects.filter((o) => o.x + o.width > 0);
+  collectibles = collectibles.filter((c) => !c.marked);
+  obstacles = obstacles.filter((o) => !o.marked);
 
+  drawScore();
+  frameCount++;
   requestAnimationFrame(gameLoop);
 }
 
-function resizeCanvas() {
-  const container = document.getElementById("game-container");
-  if (!container) return;
-  canvas.width = container.clientWidth;
-  canvas.height = container.clientHeight;
-}
+// Controls
+window.addEventListener("keydown", (e) => {
+  if (e.code === "Space" || e.code === "ArrowUp") {
+    if (gameOver) resetGame();
+    else player.jump();
+  }
+});
 
-window.addEventListener("resize", resizeCanvas);
-window.addEventListener("load", resizeCanvas);
+["touchstart", "mousedown"].forEach((evt) =>
+  window.addEventListener(evt, () => {
+    if (gameOver) resetGame();
+    else player.jump();
+  })
+);
+
+startBtn.addEventListener("click", () => {
+  if (!gameStarted) {
+    gameStarted = true;
+    playSound("start");
+  }
+  resetGame();
+});
+
+letsShopBtn.addEventListener("click", () => {
+  window.location.href = "https://auragnal.com";
+});
