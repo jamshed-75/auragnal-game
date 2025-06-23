@@ -62,11 +62,8 @@ function loadFrames(folder, count, prefix) {
 
 class Player {
   constructor() {
-    this.frameWidth = 56;
-    this.frameHeight = 56;
-    this.scale = 2.0;
     this.x = 80;
-    this.y = CANVAS_HEIGHT - this.frameHeight * this.scale - 40;
+    this.y = 0; // will calculate in update based on image height
     this.dy = 0;
     this.jumpPower = -18;
     this.grounded = true;
@@ -97,12 +94,17 @@ class Player {
     this.dy += gravity;
     this.y += this.dy;
 
-    if (this.y + this.frameHeight * this.scale >= CANVAS_HEIGHT - 40) {
-      this.y = CANVAS_HEIGHT - this.frameHeight * this.scale - 40;
-      this.dy = 0;
-      this.grounded = true;
-    } else {
-      this.grounded = false;
+    const img = this.animations[this.currentAnimation][this.currentFrame];
+    if (img.complete) {
+      const imgHeight = img.height;
+      const groundY = CANVAS_HEIGHT - imgHeight - 40;
+      if (this.y >= groundY) {
+        this.y = groundY;
+        this.dy = 0;
+        this.grounded = true;
+      } else {
+        this.grounded = false;
+      }
     }
 
     this.frameTimer++;
@@ -136,28 +138,19 @@ class Player {
     const img = this.animations[this.currentAnimation][this.currentFrame];
     if (!img.complete) return;
     ctx.save();
-    ctx.translate(this.x + this.frameWidth * this.scale, this.y);
+    ctx.translate(this.x + img.width, this.y);
     ctx.scale(-1, 1);
-    ctx.drawImage(
-      img,
-      0,
-      0,
-      this.frameWidth,
-      this.frameHeight,
-      0,
-      0,
-      this.frameWidth * this.scale,
-      this.frameHeight * this.scale
-    );
+    ctx.drawImage(img, 0, 0);
     ctx.restore();
   }
 
   getBounds() {
+    const img = this.animations[this.currentAnimation][this.currentFrame];
     return {
-      x: this.x + 15,
-      y: this.y + 12,
-      width: this.frameWidth * this.scale - 30,
-      height: this.frameHeight * this.scale - 24,
+      x: this.x + 10,
+      y: this.y + 10,
+      width: img.width - 20,
+      height: img.height - 20,
     };
   }
 }
