@@ -63,13 +63,13 @@ function loadFrames(folder, count, prefix) {
 
 class Player {
   constructor() {
-    this.frameWidth = 56;
-    this.frameHeight = 56;
-    this.scale = 1.7;
-    this.x = 100;
+    this.frameWidth = 117;  // or actual width of frame
+    this.frameHeight = 296; // or actual height
+    this.scale = 0.35;      // Adjust this if character looks too big
+    this.x = 80;
     this.y = CANVAS_HEIGHT - this.frameHeight * this.scale - 40;
     this.dy = 0;
-    this.jumpPower = -22;
+    this.jumpPower = -28;
     this.grounded = true;
     this.isDead = false;
 
@@ -161,24 +161,25 @@ class GameObject {
     if (this.x + this.width < 0) this.marked = true;
   }
 
-  draw() {
-    ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
-  }
+ draw() {
+  const img = this.animations[this.currentAnimation][this.currentFrame];
+  if (!img.complete) return;
 
-  collides(player) {
-    const px = player.x, py = player.y;
-    const pw = player.frameWidth * player.scale;
-    const ph = player.frameHeight * player.scale;
+  // Adjust scale and direction
+  const drawWidth = this.frameWidth * this.scale;
+  const drawHeight = this.frameHeight * this.scale;
 
-    return (
-      px < this.x + this.width &&
-      px + pw > this.x &&
-      py < this.y + this.height &&
-      py + ph > this.y
-    );
-  }
+  ctx.drawImage(
+    img,
+    0, 0,
+    this.frameWidth,
+    this.frameHeight,
+    this.x,
+    this.y,
+    drawWidth,
+    drawHeight
+  );
 }
-
 const player = new Player();
 let collectibles = [];
 let obstacles = [];
