@@ -133,19 +133,24 @@ const imgHeight = img.complete ? img.height : 100; // fallback if image not yet 
     this.currentFrame = 0;
   }
 
-  draw() {
+ draw() {
   const img = this.animations[this.currentAnimation][this.currentFrame];
-  if (!img.complete) return;
+  if (!img || !img.complete) return;
 
-  const drawWidth = img.width;
-  const drawHeight = img.height;
+  const scale = this.scale;
+  const drawWidth = img.width * scale;
+  const drawHeight = img.height * scale;
 
   ctx.save();
-  ctx.translate(this.x + drawWidth, this.y);
-  ctx.scale(-1, 1); // flip horizontally
-  ctx.drawImage(img, 0, 0, drawWidth, drawHeight);
+  ctx.translate(this.x + drawWidth, this.y); // offset X for flipped image
+  ctx.scale(-1, 1); // horizontal flip
+  ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, drawWidth, drawHeight);
   ctx.restore();
 }
+console.log(
+  "Draw Frame:", player.currentAnimation, player.currentFrame,
+  player.animations[player.currentAnimation][player.currentFrame].src
+);
 
   getBounds() {
     const img = this.animations[this.currentAnimation][this.currentFrame];
