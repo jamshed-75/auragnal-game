@@ -10,16 +10,22 @@
 </head>
 <body>
   <h1 id="game-title">Welcome to Mystery Shopper</h1>
-  <div id="mute-container">
-    <button id="muteBtn">🔊</button>
+
+  <div id="game-wrapper">
+    <div id="mute-container">
+      <button id="muteBtn">🔊</button>
+    </div>
+
+    <div id="game-frame">
+      <canvas id="gameCanvas"></canvas>
+    </div>
+
+    <div id="button-container">
+      <button id="startBtn">Start Game</button>
+      <button id="lets-shop">Let's Shop Instead</button>
+    </div>
   </div>
-  <div id="game-frame">
-    <canvas id="gameCanvas"></canvas>
-  </div>
-  <div id="button-container">
-    <button id="startBtn">Start Game</button>
-    <button id="lets-shop">Let's Shop Instead</button>
-  </div>
+
   <script src="game.js"></script>
 </body>
 </html>
