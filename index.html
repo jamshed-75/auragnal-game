@@ -2,25 +2,24 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AURAGNAL Mystery Shopper</title>
   <link rel="stylesheet" href="style.css" />
-  <link rel="icon" href="favicon.ico" />
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&display=swap" rel="stylesheet">
+  <link rel="icon" href="assets/images/favicon.ico" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&display=swap" rel="stylesheet" />
 </head>
 <body>
-  <h1 class="game-heading">AURAGNAL Mystery Shopper</h1>
-
-  <div id="game-wrapper">
-    <div id="game-container">
-      <canvas id="gameCanvas"></canvas>
-    </div>
+  <h1 id="game-title">Welcome to Mystery Shopper</h1>
+  <div id="mute-container">
+    <button id="muteBtn">🔊</button>
+  </div>
+  <div id="game-frame">
+    <canvas id="gameCanvas"></canvas>
+  </div>
+  <div id="button-container">
     <button id="startBtn">Start Game</button>
     <button id="lets-shop">Let's Shop Instead</button>
   </div>
-
-  <button id="muteBtn">🔊</button>
-
   <script src="game.js"></script>
 </body>
 </html>
