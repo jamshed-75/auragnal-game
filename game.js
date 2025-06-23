@@ -16,12 +16,14 @@ const gravity = 1.2;
 const CANVAS_WIDTH = 960;
 const CANVAS_HEIGHT = 540;
 
+// Set canvas size
 function setupCanvas() {
   canvas.width = CANVAS_WIDTH;
   canvas.height = CANVAS_HEIGHT;
 }
 setupCanvas();
 
+// Sounds
 const sounds = {
   start: new Audio("assets/sound/start.mp3"),
   collect: new Audio("assets/sound/collect.ogg"),
@@ -46,10 +48,12 @@ muteBtn.addEventListener("click", () => {
   else if (gameStarted) sounds.game.play();
 });
 
+// Background
 const bgImage = new Image();
 bgImage.src = "assets/images/bg.jpg";
 let bgX = 0;
 
+// Load individual frame images from folders
 function loadFrames(folder, count, prefix) {
   const frames = [];
   for (let i = 1; i <= count; i++) {
@@ -62,8 +66,11 @@ function loadFrames(folder, count, prefix) {
 
 class Player {
   constructor() {
+    this.frameWidth = 117;
+    this.frameHeight = 296;
+    this.scale = 0.6; // Adjusted to fit properly
     this.x = 80;
-    this.y = 0; // will calculate in update based on image height
+    this.y = CANVAS_HEIGHT - this.frameHeight * this.scale - 40;
     this.dy = 0;
     this.jumpPower = -18;
     this.grounded = true;
@@ -76,7 +83,7 @@ class Player {
       idle: loadFrames("idle", 3, "idle"),
     };
 
-    this.currentAnimation = "run";
+    this.currentAnimation = "idle";
     this.currentFrame = 0;
     this.frameTimer = 0;
     this.frameSpeed = 10;
@@ -94,16 +101,12 @@ class Player {
     this.dy += gravity;
     this.y += this.dy;
 
-    const img = this.animations[this.currentAnimation][this.currentFrame];
-const imgHeight = img.complete ? img.height : 100; // fallback if image not yet loaded
-      const groundY = CANVAS_HEIGHT - imgHeight - 40;
-      if (this.y >= groundY) {
-        this.y = groundY;
-        this.dy = 0;
-        this.grounded = true;
-      } else {
-        this.grounded = false;
-      }
+    if (this.y + this.frameHeight * this.scale >= CANVAS_HEIGHT - 40) {
+      this.y = CANVAS_HEIGHT - this.frameHeight * this.scale - 40;
+      this.dy = 0;
+      this.grounded = true;
+    } else {
+      this.grounded = false;
     }
 
     this.frameTimer++;
@@ -133,33 +136,25 @@ const imgHeight = img.complete ? img.height : 100; // fallback if image not yet 
     this.currentFrame = 0;
   }
 
- draw() {
-  const img = this.animations[this.currentAnimation][this.currentFrame];
-  if (!img || !img.complete) return;
-
-  const scale = this.scale;
-  const drawWidth = img.width * scale;
-  const drawHeight = img.height * scale;
-
-  ctx.save();
-  ctx.translate(this.x + drawWidth, this.y); // offset X for flipped image
-  ctx.scale(-1, 1); // horizontal flip
-  ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, drawWidth, drawHeight);
-  ctx.restore();
-}
-console.log(
-  "Draw Frame:", player.currentAnimation, player.currentFrame,
-  player.animations[player.currentAnimation][player.currentFrame].src
-);
-
-  getBounds() {
+  draw() {
     const img = this.animations[this.currentAnimation][this.currentFrame];
-    return {
-      x: this.x + 10,
-      y: this.y + 10,
-      width: img.width - 20,
-      height: img.height - 20,
-    };
+    if (!img.complete) return;
+
+    ctx.save();
+    ctx.translate(this.x + this.frameWidth * this.scale, this.y);
+    ctx.scale(-1, 1); // Flip to face ➡️
+    ctx.drawImage(
+      img,
+      0,
+      0,
+      this.frameWidth,
+      this.frameHeight,
+      0,
+      0,
+      this.frameWidth * this.scale,
+      this.frameHeight * this.scale
+    );
+    ctx.restore();
   }
 }
 
@@ -184,13 +179,11 @@ class GameObject {
   }
 
   collides(player) {
-    const a = this;
-    const b = player.getBounds();
     return !(
-      b.x > a.x + a.width ||
-      b.x + b.width < a.x ||
-      b.y > a.y + a.height ||
-      b.y + b.height < a.y
+      player.x > this.x + this.width ||
+      player.x + player.frameWidth * player.scale < this.x ||
+      player.y > this.y + this.height ||
+      player.y + player.frameHeight * player.scale < this.y
     );
   }
 }
@@ -224,7 +217,8 @@ function spawnObstacle() {
 function drawScore() {
   ctx.font = "20px Cinzel Decorative, cursive";
   ctx.fillStyle = "#588749";
-  ctx.fillText(`Score: ${score}`, 40, 40);
+  let x = window.innerWidth < 500 ? 60 : 40;
+  ctx.fillText(`Score: ${score}`, x, 40);
 }
 
 function drawBackground() {
@@ -306,19 +300,12 @@ function gameLoop() {
 }
 
 // Controls
-window.addEventListener("keydown", (e) => {
-  if (e.code === "Space" || e.code === "ArrowUp") {
+["keydown", "mousedown", "touchstart"].forEach((event) => {
+  window.addEventListener(event, (e) => {
     if (gameOver) resetGame();
     else player.jump();
-  }
+  });
 });
-
-["touchstart", "mousedown"].forEach((evt) =>
-  window.addEventListener(evt, () => {
-    if (gameOver) resetGame();
-    else player.jump();
-  })
-);
 
 startBtn.addEventListener("click", () => {
   if (!gameStarted) {
