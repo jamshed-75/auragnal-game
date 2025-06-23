@@ -72,7 +72,7 @@ class Player {
     this.x = 80;
     this.y = CANVAS_HEIGHT - this.frameHeight * this.scale - 40;
     this.dy = 0;
-    this.jumpPower = -22:
+    this.jumpPower = -25:
     this.grounded = true;
     this.isDead = false;
 
