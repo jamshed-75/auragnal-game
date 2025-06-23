@@ -95,8 +95,7 @@ class Player {
     this.y += this.dy;
 
     const img = this.animations[this.currentAnimation][this.currentFrame];
-    if (img.complete) {
-      const imgHeight = img.height;
+const imgHeight = img.complete ? img.height : 100; // fallback if image not yet loaded
       const groundY = CANVAS_HEIGHT - imgHeight - 40;
       if (this.y >= groundY) {
         this.y = groundY;
@@ -135,14 +134,18 @@ class Player {
   }
 
   draw() {
-    const img = this.animations[this.currentAnimation][this.currentFrame];
-    if (!img.complete) return;
-    ctx.save();
-    ctx.translate(this.x + img.width, this.y);
-    ctx.scale(-1, 1);
-    ctx.drawImage(img, 0, 0);
-    ctx.restore();
-  }
+  const img = this.animations[this.currentAnimation][this.currentFrame];
+  if (!img.complete) return;
+
+  const drawWidth = img.width;
+  const drawHeight = img.height;
+
+  ctx.save();
+  ctx.translate(this.x + drawWidth, this.y);
+  ctx.scale(-1, 1); // flip horizontally
+  ctx.drawImage(img, 0, 0, drawWidth, drawHeight);
+  ctx.restore();
+}
 
   getBounds() {
     const img = this.animations[this.currentAnimation][this.currentFrame];
