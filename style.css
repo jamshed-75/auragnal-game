@@ -4,58 +4,66 @@
   box-sizing: border-box;
 }
 
-{
-  font-family: 'Cinzel Decorative', cursive;
+body {
   background-color: #000;
+  font-family: 'Cinzel Decorative', cursive;
   color: #588749;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+#container {
+  width: 100%;
+  max-width: 980px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
-  height: 100vh;
-  padding: 20px 0;
 }
 
 #game-title {
-  font-size: 2.5rem;
-  margin-bottom: 16px;
+  font-size: 2.2rem;
   color: #588749;
-  text-shadow: 2px 2px 8px black;
+  text-shadow: 2px 2px 8px #000;
+  margin-bottom: 12px;
+  text-align: center;
 }
 
 #game-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-end;
 }
 
 #mute-container {
-  width: 960px;
-  max-width: 90vw;
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 8px;
+  position: absolute;
+  top: -40px;
+  right: 0;
+  z-index: 2;
 }
 
 #muteBtn {
   background: transparent;
-  font-size: 1.8rem;
   border: none;
-  color: #588749;
+  font-size: 1.8rem;
   cursor: pointer;
+  color: #588749;
 }
 
 #game-frame {
-  width: 960px;
-  max-width: 90vw;
+  width: 100%;
   aspect-ratio: 16 / 9;
   border: 5px solid #588749;
   background-color: black;
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
   position: relative;
-  user-select: none;
 }
 
 canvas {
@@ -65,28 +73,27 @@ canvas {
 }
 
 #button-container {
-  width: 960px;
-  max-width: 90vw;
   display: flex;
-  gap: 20px;
+  gap: 16px;
   margin-top: 20px;
   justify-content: center;
+  flex-wrap: wrap;
 }
 
 button {
-  padding: 12px 28px;
-  font-size: 1.1rem;
-  border: none;
-  border-radius: 8px;
-  background: #588749;
+  background-color: #588749;
   color: black;
   font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-size: 1.1rem;
   cursor: pointer;
   box-shadow: 0 4px 12px rgba(88, 135, 73, 0.6);
   transition: background-color 0.3s ease;
 }
 
 button:hover {
-  background: #40602a;
+  background-color: #40602a;
   color: #d0e2a9;
 }
