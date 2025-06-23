@@ -16,7 +16,7 @@ const gravity = 1.2;
 const CANVAS_WIDTH = 960;
 const CANVAS_HEIGHT = 540;
 
-// Set fixed canvas size for crisp pixel art
+// Set canvas size
 function setupCanvas() {
   canvas.width = CANVAS_WIDTH;
   canvas.height = CANVAS_HEIGHT;
@@ -48,15 +48,14 @@ muteBtn.addEventListener("click", () => {
   else if (gameStarted) sounds.game.play();
 });
 
-// Background Looping
+// Background
 const bgImage = new Image();
 bgImage.src = "assets/images/bg.jpg";
 let bgX = 0;
 
-// Helper: load frames from given folder and filenames
-function loadFrames(folder, frameCount, prefix) {
+function loadFrames(folder, count, prefix) {
   const frames = [];
-  for (let i = 1; i <= frameCount; i++) {
+  for (let i = 1; i <= count; i++) {
     const img = new Image();
     img.src = `assets/player/${folder}/${prefix}${i}.png`;
     frames.push(img);
@@ -66,9 +65,9 @@ function loadFrames(folder, frameCount, prefix) {
 
 class Player {
   constructor() {
-    this.frameWidth = 48;  // smaller frame size
-    this.frameHeight = 48;
-    this.scale = 2.5;      // scaled slightly bigger than objects
+    this.frameWidth = 56;
+    this.frameHeight = 56;
+    this.scale = 2.2;
     this.x = 80;
     this.y = CANVAS_HEIGHT - this.frameHeight * this.scale - 40;
     this.dy = 0;
@@ -114,7 +113,7 @@ class Player {
       this.currentFrame++;
       if (this.currentFrame >= this.animations[this.currentAnimation].length) {
         if (this.currentAnimation === "death") {
-          this.currentFrame = this.animations["death"].length - 1; // hold last death frame
+          this.currentFrame = this.animations["death"].length - 1;
         } else {
           this.currentFrame = 0;
         }
@@ -133,12 +132,12 @@ class Player {
 
   die() {
     this.isDead = true;
-    this.currentFrame = 0; // restart death animation frames from start
+    this.currentFrame = 0;
   }
 
   draw() {
     const img = this.animations[this.currentAnimation][this.currentFrame];
-    if (!img.complete) return; // wait for image load
+    if (!img.complete) return;
     ctx.save();
     ctx.translate(this.x + this.frameWidth * this.scale, this.y);
     ctx.scale(-1, 1);
@@ -178,11 +177,16 @@ class GameObject {
   }
 
   collides(player) {
+    const playerPaddingX = 18;
+    const playerPaddingY = 12;
+    const obstaclePaddingX = 12;
+    const obstaclePaddingY = 12;
+
     return !(
-      player.x > this.x + this.width ||
-      player.x + player.frameWidth * player.scale < this.x ||
-      player.y > this.y + this.height ||
-      player.y + player.frameHeight * player.scale < this.y
+      player.x + playerPaddingX > this.x + this.width - obstaclePaddingX ||
+      player.x + player.frameWidth * player.scale - playerPaddingX < this.x + obstaclePaddingX ||
+      player.y + playerPaddingY > this.y + this.height - obstaclePaddingY ||
+      player.y + player.frameHeight * player.scale - playerPaddingY < this.y + obstaclePaddingY
     );
   }
 }
@@ -216,7 +220,8 @@ function spawnObstacle() {
 function drawScore() {
   ctx.font = "20px Cinzel Decorative, cursive";
   ctx.fillStyle = "#588749";
-  ctx.fillText(`Score: ${score}`, 40, 40); // moved 20px right for full visibility
+  let x = window.innerWidth < 500 ? 60 : 40;
+  ctx.fillText(`Score: ${score}`, x, 40);
 }
 
 function drawBackground() {
@@ -285,7 +290,7 @@ function gameLoop() {
       playSound("death");
       setTimeout(() => {
         gameOver = true;
-      }, 1200);
+      }, 1000);
     }
   });
 
@@ -297,7 +302,7 @@ function gameLoop() {
   requestAnimationFrame(gameLoop);
 }
 
-// Controls: jump and tap to restart game anywhere on window
+// Controls
 window.addEventListener("keydown", (e) => {
   if (e.code === "Space" || e.code === "ArrowUp") {
     if (gameOver) resetGame();
@@ -315,7 +320,6 @@ window.addEventListener("mousedown", () => {
   else player.jump();
 });
 
-// Start button
 startBtn.addEventListener("click", () => {
   if (!gameStarted) {
     gameStarted = true;
@@ -324,7 +328,6 @@ startBtn.addEventListener("click", () => {
   resetGame();
 });
 
-// Let's Shop button instantly redirects
 letsShopBtn.addEventListener("click", () => {
   window.location.href = "https://auragnal.com";
 });
