@@ -12,7 +12,7 @@
   <h1 id="game-title">Mystery Shopper</h1>
 
   <div id="mute-container">
-    <button id="muteBtn" aria-label="Toggle Mute">🔊</button>
+    <button id="muteBtn">🔊</button>
   </div>
 
   <div id="game-frame">
@@ -23,8 +23,17 @@
   <div id="button-container">
     <button id="startBtn">Start Game</button>
     <button id="lets-shop">Let's Shop Instead</button>
-    <button id="jumpBtn">Jump ⬆️</button>
-    <button id="stopBtn">Stop 🛑</button>
+  </div>
+
+  <!-- Mobile Controls -->
+  <div id="mobile-controls" class="hidden">
+    <div class="up-row">
+      <button id="mobile-up">⬆️</button>
+    </div>
+    <div class="left-right-row">
+      <button id="mobile-left">⬅️</button>
+      <button id="mobile-right">➡️</button>
+    </div>
   </div>
 
   <div id="scoreboard">
