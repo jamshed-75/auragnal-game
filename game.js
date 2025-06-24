@@ -63,10 +63,10 @@ const cartFrames = [
 class Player {
   constructor() {
     this.scale = 0.35; // scale for cart (tweak here if needed)
-    this.x = 80;
-    this.y = CANVAS_HEIGHT - 220;
+    this.x = 60;
+    this.y = CANVAS_HEIGHT - 60;
     this.dy = 0;
-    this.jumpPower = -18;
+    this.jumpPower = -28;
     this.grounded = true;
     this.isDead = false;
     this.state = 0; // 0=empty, 1=partial, 2=full, 3=broken
