@@ -58,15 +58,17 @@ const bgImage = new Image();
 bgImage.src = "assets/images/bg_loop.png";
 let bgX = 0;
 
-function loadFrames(folder, count, prefix) {
-  const frames = [];
-  for (let i = 1; i <= count; i++) {
-    const img = new Image();
-    img.src = `assets/cart/${folder}/${prefix}${i}.png`;
-    frames.push(img);
-  }
-  return frames;
-}
+// Cart Character Frames
+const cartFrames = [
+  "cart_empty.png",
+  "cart_partial.png",
+  "cart_full.png",
+  "cart_broken.png"
+].map(name => {
+  const img = new Image();
+  img.src = `assets/cart/${name}`;
+  return img;
+});
 
 class Player {
   constructor() {
@@ -173,9 +175,9 @@ const collectibleImgs = [
   "assets/images/earing.png",
 ];
 const obstacleImgs = [
-  "assets/images/rock.png",
-  "assets/images/hump.png",
-  "assets/images/box.png",
+  "assets/images/obstacle_hanger.png",
+  "assets/images/obstacle_cart.png",
+  "assets/images/obstacle_bag.png",
 ];
 
 function spawnCollectible() {
