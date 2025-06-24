@@ -44,9 +44,9 @@ const cartFrames = ["cart_empty.png", "cart_partial.png", "cart_full.png", "cart
 
 class Player {
   constructor() {
-    this.scale = 0.3;
+    this.scale = 0.18; // 🛠 Reduced size to ~1.5x collectibles
     this.x = 100;
-    this.y = CANVAS_HEIGHT - 96 - 40;
+    this.y = CANVAS_HEIGHT - 96 * this.scale - 40;
     this.dy = 0;
     this.jumpPower = -20;
     this.grounded = true;
@@ -159,15 +159,15 @@ function drawBackground() {
   ctx.drawImage(bgImage, bgX + bgImage.width, 0, bgImage.width, CANVAS_HEIGHT);
 }
 
-function drawOverlayText() {
+function drawIntroOverlay() {
   if (!gameStarted) {
     ctx.fillStyle = "#FFFAFA";
-    ctx.font = "28px Cinzel Decorative";
+    ctx.font = "24px Cinzel Decorative";
     ctx.textAlign = "center";
     ctx.shadowColor = "black";
-    ctx.shadowBlur = 4;
+    ctx.shadowBlur = 6;
     ctx.fillText("Welcome to AURAGNAL Mystery Shopper", CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 20);
-    ctx.font = "20px Cinzel Decorative";
+    ctx.font = "18px Cinzel Decorative";
     ctx.fillText("Collect, Dodge, Survive in Style.", CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 20);
   }
 }
@@ -175,6 +175,7 @@ function drawOverlayText() {
 function drawScore() {
   ctx.fillStyle = "#FFFAFA";
   ctx.font = "20px Cinzel Decorative";
+  ctx.textAlign = "left";
   ctx.fillText(`Score: ${score}`, 20, 30);
   ctx.fillText(`High Score: ${highScore}`, 20, 60);
 }
@@ -182,8 +183,8 @@ function drawScore() {
 function drawGameOver() {
   ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
   ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-  ctx.fillStyle = "#588749";
-  ctx.font = "30px Cinzel Decorative";
+  ctx.fillStyle = "#FFFAFA";
+  ctx.font = "26px Cinzel Decorative";
   ctx.textAlign = "center";
   ctx.fillText("Game Over!", CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 30);
   ctx.fillText(`Score: ${score}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 10);
@@ -210,9 +211,10 @@ function gameLoop() {
   if (gameOver || isPaused) return;
   ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
   drawBackground();
-  drawOverlayText();
+  drawIntroOverlay();
   player.update();
   player.draw();
+
   if (frameCount % 140 === 0) spawnCollectible();
   if (frameCount % 220 === 0) spawnObstacle();
   if (dropObstaclesActive && frameCount % 20 === 0) spawnFallingObstacle();
@@ -236,7 +238,7 @@ function gameLoop() {
       gameOver = true;
       highScore = Math.max(highScore, score);
       localStorage.setItem("auragnalHighScore", highScore);
-      setTimeout(drawGameOver, 500);
+      setTimeout(drawGameOver, 600);
     }
   });
 
@@ -249,7 +251,6 @@ function gameLoop() {
       setTimeout(() => (dropObstaclesActive = false), 3000);
     }
   }
-
   frameCount++;
   requestAnimationFrame(gameLoop);
 }
@@ -265,8 +266,6 @@ startBtn.onclick = () => {
 
 tryAgainBtn.onclick = () => {
   tryAgainBtn.style.display = "none";
-  startBtn.style.display = "none";
-  letsShopBtn.style.display = "none";
   mobileControls.classList.remove("hidden");
   resetGame();
 };
