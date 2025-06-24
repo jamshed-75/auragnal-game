@@ -256,4 +256,10 @@ muteBtn.onclick = () => {
 };
 
 jumpBtn.onclick = () => {
-  player
+  player.jump();
+};
+
+stopBtn.onclick = () => {
+  gameOver = true;
+  sounds.game.pause();
+};
