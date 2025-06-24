@@ -62,7 +62,7 @@ const cartFrames = [
 
 class Player {
   constructor() {
-    this.scale = 0.35; // scale for cart (tweak here if needed)
+    this.scale = 0.20; // scale for cart (tweak here if needed)
     this.x = 60;
     this.y = CANVAS_HEIGHT - 60;
     this.dy = 0;
@@ -89,8 +89,8 @@ class Player {
 
     const cartHeight = cartFrames[0].height * this.scale;
 
-    if (this.y + cartHeight >= CANVAS_HEIGHT - 40) {
-      this.y = CANVAS_HEIGHT - cartHeight - 40;
+    if (this.y + cartHeight >= CANVAS_HEIGHT - 20) {
+      this.y = CANVAS_HEIGHT - cartHeight - 20;
       this.dy = 0;
       this.grounded = true;
     } else {
