@@ -5,22 +5,28 @@
 }
 
 body {
-  background-color: #fffafa;
+  background-color: #FFFAFA;
   font-family: 'Cinzel Decorative', cursive;
   color: #588749;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
+  align-items: flex-start;
   min-height: 100vh;
   padding: 20px;
 }
 
 #game-title {
   font-size: 2.5rem;
-  margin-bottom: 10px;
+  margin-bottom: 20px;
   text-align: center;
   color: #588749;
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+#game-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 #mute-container {
@@ -28,27 +34,28 @@ body {
   max-width: 90vw;
   display: flex;
   justify-content: flex-end;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 #muteBtn {
   background: transparent;
-  border: none;
   font-size: 1.8rem;
-  cursor: pointer;
+  border: none;
   color: #588749;
+  cursor: pointer;
 }
 
 #game-frame {
   width: 960px;
   max-width: 90vw;
   aspect-ratio: 16 / 9;
-  background-color: #000;
   border: 4px solid #588749;
+  background-color: black;
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
   position: relative;
+  user-select: none;
 }
 
 canvas {
@@ -67,18 +74,19 @@ canvas {
 }
 
 button {
-  background-color: #588749;
-  color: #fffafa;
-  border: none;
-  padding: 12px 24px;
+  padding: 12px 28px;
   font-size: 1.1rem;
+  border: none;
   border-radius: 8px;
-  cursor: pointer;
+  background: #588749;
+  color: black;
   font-weight: bold;
+  cursor: pointer;
   box-shadow: 0 4px 12px rgba(88, 135, 73, 0.6);
-  transition: background 0.3s ease;
+  transition: background-color 0.3s ease;
 }
 
 button:hover {
-  background-color: #3e602e;
+  background: #40602a;
+  color: #d0e2a9;
 }
