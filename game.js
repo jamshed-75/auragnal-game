@@ -6,63 +6,51 @@ canvas.height = 540;
 const startBtn = document.getElementById("startBtn");
 const letsShopBtn = document.getElementById("lets-shop");
 const muteBtn = document.getElementById("muteBtn");
-const jumpBtn = document.getElementById("jumpBtn");
-const stopBtn = document.getElementById("stopBtn");
 const tryAgainBtn = document.getElementById("tryAgainBtn");
+const mobileControls = document.getElementById("mobile-controls");
+const btnLeft = document.getElementById("mobile-left");
+const btnRight = document.getElementById("mobile-right");
+const btnUp = document.getElementById("mobile-up");
 
 let isMuted = false;
-let gameStarted = false;
 let gameOver = false;
 let frameCount = 0;
 let gameSpeed = 4;
 let score = 0;
 let highScore = localStorage.getItem("auragnalHighScore") || 0;
-let playerStopped = false;
-
-// Load sounds
-const sounds = {
-  jump: new Audio("assets/sound/jump.wav"),
-  collect: new Audio("assets/sound/collect.ogg"),
-  death: new Audio("assets/sound/death.wav"),
-  game: new Audio("assets/sound/game.wav"),
-};
 
 // Background
 const bgImage = new Image();
-bgImage.src = "assets/images/bg_loop.png"; // assumed 6120x1440
+bgImage.src = "assets/images/bg_loop.png";
 let bgX = 0;
 
 // Cart Frames
-const cartFrames = [
-  "cart_empty.png",
-  "cart_partial.png",
-  "cart_full.png",
-  "cart_broken.png"
-].map(name => {
+const cartFrames = ["cart_empty.png", "cart_partial.png", "cart_full.png", "cart_broken.png"].map(name => {
   const img = new Image();
   img.src = `assets/cart/${name}`;
   return img;
 });
 
-// Player
 class Player {
   constructor() {
-    this.scale = 0.2; // Tiny cart now visible
+    this.scale = 0.13;
     this.x = 100;
-    this.y = canvas.height - 96 * this.scale - 40;
+    this.y = canvas.height - 380 * this.scale - 40;
     this.dy = 0;
-    this.jumpPower = -20;
+    this.dx = 0;
+    this.jumpPower = -18;
     this.grounded = true;
     this.isDead = false;
     this.state = 0;
   }
 
   update() {
-    if (playerStopped || this.isDead) return;
+    if (this.isDead) return;
     this.dy += 1;
     this.y += this.dy;
+    this.x += this.dx;
 
-    const groundY = canvas.height - 96 * this.scale - 40;
+    const groundY = canvas.height - 380 * this.scale - 40;
     if (this.y >= groundY) {
       this.y = groundY;
       this.dy = 0;
@@ -70,31 +58,30 @@ class Player {
     } else {
       this.grounded = false;
     }
+
+    // Bounds
+    this.x = Math.max(0, Math.min(this.x, canvas.width - 405 * this.scale));
   }
 
   jump() {
     if (this.grounded && !this.isDead) {
       this.dy = this.jumpPower;
-      if (!isMuted) sounds.jump.play();
     }
   }
 
   draw() {
     const img = cartFrames[this.state];
-    if (!img.complete) return;
-    const width = img.width * this.scale;
-    const height = img.height * this.scale;
+    const width = 405 * this.scale;
+    const height = 380 * this.scale;
     ctx.drawImage(img, this.x, this.y, width, height);
   }
 
   die() {
     this.isDead = true;
     this.state = 3;
-    if (!isMuted) sounds.death.play();
   }
 }
 
-// Obstacle / Collectible Class
 class GameObject {
   constructor(imgSrc, size = 48) {
     this.image = new Image();
@@ -117,9 +104,9 @@ class GameObject {
   collides(player) {
     return !(
       player.x > this.x + this.size ||
-      player.x + 96 * player.scale < this.x ||
+      player.x + 405 * player.scale < this.x ||
       player.y > this.y + this.size ||
-      player.y + 96 * player.scale < this.y
+      player.y + 380 * player.scale < this.y
     );
   }
 }
@@ -158,16 +145,16 @@ function drawBackground() {
 }
 
 function drawScore() {
-  ctx.fillStyle = "#ffffff";
+  ctx.fillStyle = "#fff";
   ctx.font = "20px Cinzel Decorative";
   ctx.fillText(`Score: ${score}`, 20, 30);
   ctx.fillText(`High Score: ${highScore}`, 20, 60);
 }
 
 function drawGameOver() {
-  ctx.fillStyle = "rgba(0,0,0,0.6)";
+  ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = "#ffffff";
+  ctx.fillStyle = "#fff";
   ctx.font = "30px Cinzel Decorative";
   ctx.textAlign = "center";
   ctx.fillText("Game Over!", canvas.width / 2, canvas.height / 2 - 30);
@@ -182,10 +169,10 @@ function resetGame() {
   frameCount = 0;
   collectibles = [];
   obstacles = [];
-  playerStopped = false;
   player.isDead = false;
   player.state = 0;
-  player.y = canvas.height - 96 * player.scale - 40;
+  player.x = 100;
+  player.y = canvas.height - 380 * player.scale - 40;
   tryAgainBtn.classList.add("hidden");
   requestAnimationFrame(gameLoop);
 }
@@ -198,14 +185,11 @@ function gameLoop() {
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   drawBackground();
-
-  if (!playerStopped) {
-    if (frameCount % 140 === 0) spawnCollectible();
-    if (frameCount % 220 === 0) spawnObstacle();
-  }
-
   player.update();
   player.draw();
+
+  if (frameCount % 140 === 0) spawnCollectible();
+  if (frameCount % 220 === 0) spawnObstacle();
 
   collectibles.forEach((c, i) => {
     c.update();
@@ -214,7 +198,6 @@ function gameLoop() {
       score += 10;
       player.state = Math.min(2, player.state + 1);
       collectibles.splice(i, 1);
-      if (!isMuted) sounds.collect.play();
     }
   });
 
@@ -231,43 +214,42 @@ function gameLoop() {
 
   drawScore();
   frameCount++;
-  if (score % 50 === 0 && frameCount % 10 === 0) {
-    gameSpeed += 0.1;
-  }
-
   requestAnimationFrame(gameLoop);
 }
 
-// Events
+// Keyboard Movement
+window.addEventListener("keydown", (e) => {
+  if (["ArrowUp", "Space", "KeyW"].includes(e.code)) player.jump();
+  if (["ArrowLeft", "KeyA"].includes(e.code)) player.dx = -5;
+  if (["ArrowRight", "KeyD"].includes(e.code)) player.dx = 5;
+});
+window.addEventListener("keyup", (e) => {
+  if (["ArrowLeft", "KeyA", "ArrowRight", "KeyD"].includes(e.code)) player.dx = 0;
+});
+
+// Mobile Movement
+btnUp.onclick = () => player.jump();
+btnLeft.onpointerdown = () => player.dx = -5;
+btnRight.onpointerdown = () => player.dx = 5;
+btnLeft.onpointerup = btnRight.onpointerup = () => player.dx = 0;
+
+// Game Start / Reset
 startBtn.onclick = () => {
   startBtn.style.display = "none";
   letsShopBtn.style.display = "none";
-  jumpBtn.style.display = "inline-block";
-  stopBtn.style.display = "inline-block";
-  if (!isMuted) {
-    sounds.game.loop = true;
-    sounds.game.play();
-  }
+  muteBtn.style.display = "none";
+  mobileControls.classList.remove("hidden");
   resetGame();
 };
-
-tryAgainBtn.onclick = () => resetGame();
-
-letsShopBtn.onclick = () => {
-  window.location.href = "https://auragnal.com";
+tryAgainBtn.onclick = () => {
+  startBtn.style.display = "inline-block";
+  letsShopBtn.style.display = "inline-block";
+  muteBtn.style.display = "inline-block";
+  mobileControls.classList.add("hidden");
+  resetGame();
 };
-
+letsShopBtn.onclick = () => window.location.href = "https://auragnal.com";
 muteBtn.onclick = () => {
   isMuted = !isMuted;
   muteBtn.textContent = isMuted ? "🔇" : "🔊";
-  if (isMuted) sounds.game.pause();
-  else if (!gameOver) sounds.game.play();
 };
-
-jumpBtn.onclick = () => player.jump();
-stopBtn.onclick = () => playerStopped = !playerStopped;
-
-window.addEventListener("keydown", (e) => {
-  if (["ArrowUp", "KeyW", "Space"].includes(e.code)) player.jump();
-  if (["ArrowDown", "KeyS"].includes(e.code)) playerStopped = true;
-});
