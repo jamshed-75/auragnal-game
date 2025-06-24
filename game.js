@@ -62,35 +62,35 @@ const cartFrames = [
 
 class Player {
   constructor() {
-    this.scale = 0.20; // scale for cart (tweak here if needed)
+    this.frameWidth = 256; // Actual image size
+    this.frameHeight = 256;
+    this.scale = 0.35; // Tweak this down if still too big
     this.x = 60;
-    this.y = CANVAS_HEIGHT - 60;
+    this.y = CANVAS_HEIGHT - this.frameHeight * this.scale - 40;
     this.dy = 0;
     this.jumpPower = -28;
     this.grounded = true;
     this.isDead = false;
     this.state = 0; // 0=empty, 1=partial, 2=full, 3=broken
+
+    this.cartFrames = [
+      "assets/cart/cart_empty.png",
+      "assets/cart/cart_partial.png",
+      "assets/cart/cart_full.png",
+      "assets/cart/cart_broken.png"
+    ].map((src) => {
+      const img = new Image();
+      img.src = src;
+      return img;
+    });
   }
 
   update() {
-    // Update cart fill state
-    if (this.isDead) {
-      this.state = 3; // broken
-    } else if (score >= 100) {
-      this.state = 2; // full
-    } else if (score >= 50) {
-      this.state = 1; // partial
-    } else {
-      this.state = 0; // empty
-    }
-
     this.dy += gravity;
     this.y += this.dy;
 
-    const cartHeight = cartFrames[0].height * this.scale;
-
-    if (this.y + cartHeight >= CANVAS_HEIGHT - 20) {
-      this.y = CANVAS_HEIGHT - cartHeight - 20;
+    if (this.y + this.frameHeight * this.scale >= CANVAS_HEIGHT - 40) {
+      this.y = CANVAS_HEIGHT - this.frameHeight * this.scale - 40;
       this.dy = 0;
       this.grounded = true;
     } else {
@@ -106,11 +106,27 @@ class Player {
     }
   }
 
-  die() {
-    this.isDead = true;
-    this.state = 3;
+  draw() {
+    const img = this.cartFrames[this.state];
+    if (!img.complete) return;
+
+    ctx.drawImage(
+      img,
+      0, 0,
+      this.frameWidth,
+      this.frameHeight,
+      this.x,
+      this.y,
+      this.frameWidth * this.scale,
+      this.frameHeight * this.scale
+    );
   }
 
+  die() {
+    this.state = 3;
+    this.isDead = true;
+  }
+}
   draw() {
     const img = cartFrames[this.state];
     if (!img.complete) return;
