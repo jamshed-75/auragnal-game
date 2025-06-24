@@ -106,20 +106,15 @@ class Player {
     }
   }
 
-  draw() {
-    const img = this.cartFrames[this.state];
-    if (!img.complete) return;
+draw() {
+  const img = this.cartFrames[this.state];
+  if (!img.complete) return;
 
-    ctx.drawImage(
-      img,
-      0, 0,
-      this.frameWidth,
-      this.frameHeight,
-      this.x,
-      this.y,
-      this.frameWidth * this.scale,
-      this.frameHeight * this.scale
-    );
+  const width = img.width * this.scale;
+  const height = img.height * this.scale;
+
+  ctx.drawImage(img, this.x, this.y, width, height);
+}
   }
 
   die() {
@@ -127,17 +122,7 @@ class Player {
     this.isDead = true;
   }
 }
-  draw() {
-    const img = cartFrames[this.state];
-    if (!img.complete) return;
-
-    const width = img.width * this.scale;
-    const height = img.height * this.scale;
-
-    ctx.drawImage(img, this.x, this.y, width, height);
-  }
-}
-
+  
 class GameObject {
   constructor(imgSrc, width, height) {
     this.image = new Image();
