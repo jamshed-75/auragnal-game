@@ -5,7 +5,7 @@
 }
 
 body {
-  background-color: #FFFAFA; /* light outside background */
+  background-color: #FFFAFA;
   font-family: 'Cinzel Decorative', cursive;
   color: #588749;
   display: flex;
@@ -67,16 +67,19 @@ canvas {
 }
 
 #button-container button,
-#tryAgainBtn {
-  padding: 10px 20px;
-  font-size: 1rem;
+#tryAgainBtn,
+#mobile-controls button {
+  padding: 12px 24px;
+  font-size: 1.2rem;
   background-color: #588749;
   color: black;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   font-weight: bold;
   cursor: pointer;
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+  user-select: none;
+  touch-action: manipulation;
 }
 
 #tryAgainBtn {
@@ -96,4 +99,23 @@ canvas {
 
 .hidden {
   display: none !important;
+}
+
+/* Mobile Controls Layout */
+#mobile-controls {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.up-row {
+  display: flex;
+  justify-content: center;
+}
+
+.left-right-row {
+  display: flex;
+  gap: 40px;
 }
