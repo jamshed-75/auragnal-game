@@ -5,7 +5,7 @@
 }
 
 body {
-  background-color: #FFFAFA;
+  background-color: #000;
   font-family: 'Cinzel Decorative', cursive;
   color: #588749;
   display: flex;
@@ -16,17 +16,11 @@ body {
 }
 
 #game-title {
+  margin-bottom: 12px;
   font-size: 2.5rem;
-  margin-bottom: 20px;
   text-align: center;
   color: #588749;
-  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
-}
-
-#game-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  text-shadow: 2px 2px 8px black;
 }
 
 #mute-container {
@@ -49,8 +43,8 @@ body {
   width: 960px;
   max-width: 90vw;
   aspect-ratio: 16 / 9;
-  border: 4px solid #588749;
-  background-color: black;
+  border: 5px solid #588749;
+  background-color: #FFFAFA;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -68,9 +62,9 @@ canvas {
   width: 960px;
   max-width: 90vw;
   display: flex;
-  justify-content: center;
   gap: 20px;
   margin-top: 20px;
+  justify-content: center;
 }
 
 button {
