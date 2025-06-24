@@ -23,6 +23,7 @@ const sounds = {
   jump: new Audio("assets/sound/jump.wav"),
   collect: new Audio("assets/sound/collect.ogg"),
   death: new Audio("assets/sound/death.wav"),
+  game: new Audio("assets/sound/game.wav"), // background music
 };
 
 // Background
@@ -30,7 +31,7 @@ const bgImage = new Image();
 bgImage.src = "assets/images/bg_loop.png";
 let bgX = 0;
 
-// Cart Frames
+// Cart Frames (Adjusted cart scale to make it visible)
 const cartFrames = [
   "cart_empty.png",
   "cart_partial.png",
@@ -45,9 +46,9 @@ const cartFrames = [
 // Player
 class Player {
   constructor() {
-    this.scale = 1; // Slightly larger cart now
+    this.scale = 0.75; // Reduced cart scale
     this.x = 100;
-    this.y = canvas.height - 96 - 40;
+    this.y = canvas.height - 96 - 40; // Ensured player starts at ground level
     this.dy = 0;
     this.jumpPower = -25;
     this.grounded = true;
@@ -155,7 +156,7 @@ function drawBackground() {
 }
 
 function drawScore() {
-  ctx.fillStyle = "#588749";
+  ctx.fillStyle = "#ffffff"; // white text
   ctx.font = "20px Cinzel Decorative";
   ctx.fillText(`Score: ${score}`, 20, 30);
   ctx.fillText(`High Score: ${highScore}`, 20, 60);
@@ -164,7 +165,7 @@ function drawScore() {
 function drawGameOver() {
   ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = "#588749";
+  ctx.fillStyle = "#ffffff"; // white text
   ctx.font = "30px Cinzel Decorative";
   ctx.textAlign = "center";
   ctx.fillText("Game Over!", canvas.width / 2, canvas.height / 2 - 30);
@@ -236,6 +237,7 @@ startBtn.onclick = () => {
   jumpBtn.style.display = "inline-block";
   stopBtn.style.display = "inline-block";
   resetGame();
+  if (!isMuted) sounds.game.loop = true; sounds.game.play();
 };
 
 tryAgainBtn.onclick = () => {
@@ -249,12 +251,9 @@ letsShopBtn.onclick = () => {
 muteBtn.onclick = () => {
   isMuted = !isMuted;
   muteBtn.textContent = isMuted ? "🔇" : "🔊";
+  if (isMuted) sounds.game.pause();
+  else sounds.game.play();
 };
 
 jumpBtn.onclick = () => {
-  player.jump();
-};
-
-window.addEventListener("keydown", (e) => {
-  if (["ArrowUp", "Space", "KeyW"].includes(e.code)) player.jump();
-});
+  player
