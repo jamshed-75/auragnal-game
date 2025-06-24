@@ -168,9 +168,9 @@ const collectibleImgs = [
 ];
 
 const obstacleImgs = [
-  "assets/images/obstacle_rock.png",
-  "assets/images/obstacle_hump.png",
-  "assets/images/obstacle_trash.png"
+  "assets/images/obstacle_bag.png",
+  "assets/images/obstacle_hanger.png",
+  "assets/images/obstacle_cart.png"
 ];
 
 function spawnCollectible() {
