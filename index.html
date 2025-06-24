@@ -1,27 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AURAGNAL Mystery Shopper</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="icon" href="assets/images/favicon.ico">
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="assets/images/favicon.ico" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&display=swap" rel="stylesheet" />
 </head>
 <body>
-  <h1 id="game-title">Welcome to Mystery Shopper</h1>
+  <h1 id="game-title">Mystery Shopper</h1>
+
   <div id="mute-container">
     <button id="muteBtn">🔊</button>
   </div>
+
   <div id="game-frame">
     <canvas id="gameCanvas"></canvas>
-    <div id="button-container">
-      <button id="startBtn">Start Game</button>
-      <button id="lets-shop">Let's Shop Instead</button>
-      <button id="tryAgainBtn" style="display:none;">Try Again</button>
-      <button id="jumpBtn" style="display:none;">Jump</button>
-      <button id="stopBtn" style="display:none;">Stop</button>
+
+    <!-- Controls inside game -->
+    <div id="in-game-buttons">
+      <button id="jumpBtn">Jump ⬆️</button>
+      <button id="stopBtn">Stop 🛑</button>
     </div>
+
+    <!-- Try Again -->
+    <button id="tryAgainBtn" class="hidden">Try Again 🔁</button>
   </div>
+
+  <!-- Start + Shop -->
+  <div id="button-container">
+    <button id="startBtn">Start Game</button>
+    <button id="lets-shop">Let's Shop Instead</button>
+  </div>
+
+  <div id="scoreboard">
+    <p>Score: <span id="score">0</span></p>
+    <p>High Score: <span id="highScore">0</span></p>
+  </div>
+
   <script src="game.js"></script>
 </body>
 </html>
