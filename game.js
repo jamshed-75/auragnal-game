@@ -72,32 +72,23 @@ const cartFrames = [
 
 class Player {
   constructor() {
-    this.frameWidth = 56;
-    this.frameHeight = 56;
+    this.cartFrames = cartFrames;
+    this.scale = 1.5; // Adjust this as needed
     this.x = 60;
-    this.y = CANVAS_HEIGHT - this.frameHeight * cartScale - 20;
+    this.y = CANVAS_HEIGHT - 140; // Adjust to bring cart into view
     this.dy = 0;
     this.jumpPower = -28;
     this.grounded = true;
     this.isDead = false;
-    this.state = 0; // 0=empty, 1=partial, 2=full, 3=broken
-    this.cartFrames = loadFrames("cart", 4, "cart");
+    this.state = 0; // 0 = empty, 1 = partial, 2 = full, 3 = broken
   }
 
   update() {
-    if (this.isDead) {
-      this.state = 3; // broken
-    } else if (!this.grounded) {
-      this.state = 2; // full cart
-    } else {
-      this.state = 0; // empty cart
-    }
-
     this.dy += gravity;
     this.y += this.dy;
 
-    if (this.y + this.frameHeight * cartScale >= CANVAS_HEIGHT - 40) {
-      this.y = CANVAS_HEIGHT - this.frameHeight * cartScale - 40;
+    if (this.y >= CANVAS_HEIGHT - 140) {
+      this.y = CANVAS_HEIGHT - 140;
       this.dy = 0;
       this.grounded = true;
     } else {
@@ -109,15 +100,24 @@ class Player {
     if (this.grounded && !this.isDead) {
       this.dy = this.jumpPower;
       this.grounded = false;
-      playSound("jump");
     }
   }
 
-  die() {
-    this.isDead = true;
-    this.state = 3; // broken cart
+  draw() {
+    const img = this.cartFrames[this.state];
+    if (!img.complete) return;
+
+    const width = img.width * this.scale;
+    const height = img.height * this.scale;
+
+    ctx.drawImage(img, this.x, this.y, width, height);
   }
 
+  die() {
+    this.state = 3; // broken
+    this.isDead = true;
+  }
+}
   draw() {
     const img = this.cartFrames[this.state];
     if (!img.complete) return;
