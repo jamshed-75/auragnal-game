@@ -18,23 +18,26 @@
 
   <div id="game-frame">
     <canvas id="gameCanvas"></canvas>
-    <button id="tryAgainBtn" class="hidden">Try Again</button>
+
+    <!-- Mobile Controls -->
+    <div id="mobile-controls" class="hidden">
+      <div class="up-row">
+        <button id="mobile-up" class="arrow-btn">⬆️</button>
+      </div>
+      <div class="left-right-row">
+        <button id="mobile-left" class="arrow-btn">⬅️</button>
+        <button id="mobile-right" class="arrow-btn">➡️</button>
+      </div>
+    </div>
+
+    <!-- Try Again -->
+    <button id="tryAgainBtn" class="hidden">Try Again 🔁</button>
   </div>
 
+  <!-- Start + Shop -->
   <div id="button-container">
     <button id="startBtn">Start Game</button>
     <button id="lets-shop">Let's Shop Instead</button>
-  </div>
-
-  <!-- Mobile Controls -->
-  <div id="mobile-controls" class="hidden">
-    <div class="up-row">
-      <button id="mobile-up" class="arrow-btn">↑</button>
-    </div>
-    <div class="left-right-row">
-      <button id="mobile-left" class="arrow-btn">←</button>
-      <button id="mobile-right" class="arrow-btn">→</button>
-    </div>
   </div>
 
   <script src="game.js"></script>
