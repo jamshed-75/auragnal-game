@@ -17,21 +17,22 @@ let frameCount = 0;
 let gameSpeed = 4;
 let score = 0;
 let highScore = localStorage.getItem("auragnalHighScore") || 0;
+let playerStopped = false;
 
 // Load sounds
 const sounds = {
   jump: new Audio("assets/sound/jump.wav"),
   collect: new Audio("assets/sound/collect.ogg"),
   death: new Audio("assets/sound/death.wav"),
-  game: new Audio("assets/sound/game.wav"), // background music
+  game: new Audio("assets/sound/game.wav"),
 };
 
 // Background
 const bgImage = new Image();
-bgImage.src = "assets/images/bg_loop.png";
+bgImage.src = "assets/images/bg_loop.png"; // assumed 6120x1440
 let bgX = 0;
 
-// Cart Frames (Adjusted cart scale to make it visible)
+// Cart Frames
 const cartFrames = [
   "cart_empty.png",
   "cart_partial.png",
@@ -46,22 +47,24 @@ const cartFrames = [
 // Player
 class Player {
   constructor() {
-    this.scale = 0.75; // Reduced cart scale
+    this.scale = 0.2; // Tiny cart now visible
     this.x = 100;
-    this.y = canvas.height - 96 - 40; // Ensured player starts at ground level
+    this.y = canvas.height - 96 * this.scale - 40;
     this.dy = 0;
-    this.jumpPower = -25;
+    this.jumpPower = -20;
     this.grounded = true;
     this.isDead = false;
     this.state = 0;
   }
 
   update() {
-    this.dy += 1; // gravity
+    if (playerStopped || this.isDead) return;
+    this.dy += 1;
     this.y += this.dy;
 
-    if (this.y + 96 >= canvas.height - 40) {
-      this.y = canvas.height - 96 - 40;
+    const groundY = canvas.height - 96 * this.scale - 40;
+    if (this.y >= groundY) {
+      this.y = groundY;
       this.dy = 0;
       this.grounded = true;
     } else {
@@ -91,9 +94,9 @@ class Player {
   }
 }
 
-// Game Object (Obstacles & Collectibles)
+// Obstacle / Collectible Class
 class GameObject {
-  constructor(imgSrc, size = 56) {
+  constructor(imgSrc, size = 48) {
     this.image = new Image();
     this.image.src = imgSrc;
     this.size = size;
@@ -121,7 +124,6 @@ class GameObject {
   }
 }
 
-// Variables
 const player = new Player();
 let collectibles = [];
 let obstacles = [];
@@ -140,12 +142,12 @@ const obstacleImgs = [
 
 function spawnCollectible() {
   const img = collectibleImgs[Math.floor(Math.random() * collectibleImgs.length)];
-  collectibles.push(new GameObject(img, 48));
+  collectibles.push(new GameObject(img));
 }
 
 function spawnObstacle() {
   const img = obstacleImgs[Math.floor(Math.random() * obstacleImgs.length)];
-  obstacles.push(new GameObject(img, 48));
+  obstacles.push(new GameObject(img));
 }
 
 function drawBackground() {
@@ -156,16 +158,16 @@ function drawBackground() {
 }
 
 function drawScore() {
-  ctx.fillStyle = "#ffffff"; // white text
+  ctx.fillStyle = "#ffffff";
   ctx.font = "20px Cinzel Decorative";
   ctx.fillText(`Score: ${score}`, 20, 30);
   ctx.fillText(`High Score: ${highScore}`, 20, 60);
 }
 
 function drawGameOver() {
-  ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
+  ctx.fillStyle = "rgba(0,0,0,0.6)";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = "#ffffff"; // white text
+  ctx.fillStyle = "#ffffff";
   ctx.font = "30px Cinzel Decorative";
   ctx.textAlign = "center";
   ctx.fillText("Game Over!", canvas.width / 2, canvas.height / 2 - 30);
@@ -177,11 +179,13 @@ function resetGame() {
   gameOver = false;
   gameSpeed = 4;
   score = 0;
+  frameCount = 0;
   collectibles = [];
   obstacles = [];
+  playerStopped = false;
   player.isDead = false;
   player.state = 0;
-  player.y = canvas.height - 96 - 40;
+  player.y = canvas.height - 96 * player.scale - 40;
   tryAgainBtn.classList.add("hidden");
   requestAnimationFrame(gameLoop);
 }
@@ -195,14 +199,17 @@ function gameLoop() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   drawBackground();
 
-  // Draw in correct order
-  obstacles.forEach(o => { o.update(); o.draw(); });
-  collectibles.forEach(c => { c.update(); c.draw(); });
+  if (!playerStopped) {
+    if (frameCount % 140 === 0) spawnCollectible();
+    if (frameCount % 220 === 0) spawnObstacle();
+  }
 
   player.update();
   player.draw();
 
   collectibles.forEach((c, i) => {
+    c.update();
+    c.draw();
     if (c.collides(player)) {
       score += 10;
       player.state = Math.min(2, player.state + 1);
@@ -211,7 +218,9 @@ function gameLoop() {
     }
   });
 
-  obstacles.forEach(o => {
+  obstacles.forEach((o) => {
+    o.update();
+    o.draw();
     if (o.collides(player)) {
       player.die();
       gameOver = true;
@@ -222,27 +231,27 @@ function gameLoop() {
 
   drawScore();
   frameCount++;
-  if (score % 50 === 0 && score !== 0 && frameCount % 10 === 0) {
+  if (score % 50 === 0 && frameCount % 10 === 0) {
     gameSpeed += 0.1;
   }
 
   requestAnimationFrame(gameLoop);
 }
 
-// Controls
+// Events
 startBtn.onclick = () => {
-  gameStarted = true;
   startBtn.style.display = "none";
   letsShopBtn.style.display = "none";
   jumpBtn.style.display = "inline-block";
   stopBtn.style.display = "inline-block";
+  if (!isMuted) {
+    sounds.game.loop = true;
+    sounds.game.play();
+  }
   resetGame();
-  if (!isMuted) sounds.game.loop = true; sounds.game.play();
 };
 
-tryAgainBtn.onclick = () => {
-  resetGame();
-};
+tryAgainBtn.onclick = () => resetGame();
 
 letsShopBtn.onclick = () => {
   window.location.href = "https://auragnal.com";
@@ -252,14 +261,13 @@ muteBtn.onclick = () => {
   isMuted = !isMuted;
   muteBtn.textContent = isMuted ? "🔇" : "🔊";
   if (isMuted) sounds.game.pause();
-  else sounds.game.play();
+  else if (!gameOver) sounds.game.play();
 };
 
-jumpBtn.onclick = () => {
-  player.jump();
-};
+jumpBtn.onclick = () => player.jump();
+stopBtn.onclick = () => playerStopped = !playerStopped;
 
-stopBtn.onclick = () => {
-  gameOver = true;
-  sounds.game.pause();
-};
+window.addEventListener("keydown", (e) => {
+  if (["ArrowUp", "KeyW", "Space"].includes(e.code)) player.jump();
+  if (["ArrowDown", "KeyS"].includes(e.code)) playerStopped = true;
+});
