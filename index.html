@@ -12,23 +12,20 @@
   <h1 id="game-title">Mystery Shopper</h1>
 
   <div id="mute-container">
-    <button id="muteBtn">🔊</button>
+    <button id="muteBtn" aria-label="Toggle Mute">🔊</button>
   </div>
 
   <div id="game-frame">
     <canvas id="gameCanvas"></canvas>
 
-    <!-- Controls inside game -->
     <div id="in-game-buttons">
       <button id="jumpBtn">Jump ⬆️</button>
       <button id="stopBtn">Stop 🛑</button>
     </div>
 
-    <!-- Try Again -->
     <button id="tryAgainBtn" class="hidden">Try Again 🔁</button>
   </div>
 
-  <!-- Start + Shop -->
   <div id="button-container">
     <button id="startBtn">Start Game</button>
     <button id="lets-shop">Let's Shop Instead</button>
