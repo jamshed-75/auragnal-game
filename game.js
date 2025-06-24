@@ -114,8 +114,7 @@ draw() {
   const height = img.height * this.scale;
 
   ctx.drawImage(img, this.x, this.y, width, height);
-}
-  }
+   }
 
   die() {
     this.state = 3;
