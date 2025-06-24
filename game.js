@@ -32,75 +32,28 @@ const sounds = {
   jump: new Audio("assets/sound/jump.wav"),
   collect: new Audio("assets/sound/collect.ogg"),
   death: new Audio("assets/sound/death.wav"),
-  music: new Audio("assets/sound/game.wav")
+  music: new Audio("assets/sound/game.wav"),
 };
 sounds.music.loop = true;
 
-const cartFrames = ["cart_empty.png", "cart_partial.png", "cart_full.png", "cart_broken.png"].map(function(name) {
+const cartFrames = ["cart_empty.png", "cart_partial.png", "cart_full.png", "cart_broken.png"].map(name => {
   const img = new Image();
   img.src = `assets/cart/${name}`;
   return img;
 });
 
-class Player {
-  constructor() {
-    this.scale = 0.18; // 🛠 Reduced size to ~1.5x collectibles
-    this.x = 100;
-    this.y = CANVAS_HEIGHT - 96 * this.scale - 40;
-    this.dy = 0;
-    this.jumpPower = -20;
-    this.grounded = true;
-    this.isDead = false;
-    this.state = 0;
-  }
-  update() {
-    this.dy += 1.1;
-    this.y += this.dy;
-    if (this.y + 96 * this.scale >= CANVAS_HEIGHT - 40) {
-      this.y = CANVAS_HEIGHT - 96 * this.scale - 40;
-      this.dy = 0;
-      this.grounded = true;
-    } else {
-      this.grounded = false;
-    }
-  }
-  jump() {
-    if (this.grounded && !this.isDead) {
-      this.dy = this.jumpPower;
-      if (!isMuted) sounds.jump.play();
-    }
-  }
-  draw() {
-    const img = cartFrames[this.state];
-    if (!img.complete) return;
-    const width = img.width * this.scale;
-    const height = img.height * this.scale;
-    ctx.drawImage(img, this.x, this.y, width, height);
-  }
-  die() {
-    this.isDead = true;
-    this.state = 3;
-    if (!isMuted) sounds.death.play();
-  }
-  move(dir) {
-    if (dir === "left") this.x -= 5;
-    else if (dir === "right") this.x += 5;
-    this.x = Math.max(0, Math.min(this.x, CANVAS_WIDTH - 96 * this.scale));
-  }
-}
-
 class GameObject {
-  constructor(imgSrc, size = 48, fall = false) {
+  constructor(imgSrc, size = 56, falling = false) {
     this.image = new Image();
     this.image.src = imgSrc;
     this.size = size;
     this.x = CANVAS_WIDTH + Math.random() * 300 + 200;
-    this.y = fall ? -size : CANVAS_HEIGHT - size - 40;
-    this.fall = fall;
+    this.y = falling ? -size : CANVAS_HEIGHT - size - 40;
+    this.falling = falling;
     this.marked = false;
   }
   update() {
-    if (this.fall) {
+    if (this.falling) {
       this.y += gameSpeed;
     } else {
       this.x -= gameSpeed;
@@ -113,43 +66,102 @@ class GameObject {
   collides(player) {
     return !(
       player.x > this.x + this.size ||
-      player.x + 96 * player.scale < this.x ||
+      player.x + player.width < this.x ||
       player.y > this.y + this.size ||
-      player.y + 96 * player.scale < this.y
+      player.y + player.height < this.y
     );
+  }
+}
+
+class Player {
+  constructor() {
+    this.scale = 0.13;
+    this.x = 100;
+    this.y = CANVAS_HEIGHT - 380 * this.scale - 40;
+    this.dy = 0;
+    this.width = 405 * this.scale;
+    this.height = 380 * this.scale;
+    this.jumpPower = -20;
+    this.grounded = true;
+    this.isDead = false;
+    this.state = 0;
+  }
+  update() {
+    if (!this.isDead && !isPaused) {
+      this.dy += 1.1;
+      this.y += this.dy;
+      if (this.y + this.height >= CANVAS_HEIGHT - 40) {
+        this.y = CANVAS_HEIGHT - this.height - 40;
+        this.dy = 0;
+        this.grounded = true;
+      } else {
+        this.grounded = false;
+      }
+    }
+  }
+  draw() {
+    const img = cartFrames[this.state];
+    if (!img.complete) return;
+    this.width = img.width * this.scale;
+    this.height = img.height * this.scale;
+    ctx.drawImage(img, this.x, this.y, this.width, this.height);
+  }
+  jump() {
+    if (this.grounded && !this.isDead) {
+      this.dy = this.jumpPower;
+      if (!isMuted) sounds.jump.play();
+    }
+  }
+  moveLeft() {
+    if (!this.isDead) this.x = Math.max(0, this.x - 10);
+  }
+  moveRight() {
+    if (!this.isDead) this.x = Math.min(CANVAS_WIDTH - this.width, this.x + 10);
+  }
+  die() {
+    this.isDead = true;
+    this.state = 3;
+    if (!isMuted) sounds.death.play();
   }
 }
 
 const player = new Player();
 let collectibles = [];
 let obstacles = [];
-let fallingObstacles = [];
-let dropObstaclesActive = false;
+let fallingObstacles = false;
 
 const collectibleImgs = [
   "assets/images/heels.png",
   "assets/images/handbag.png",
-  "assets/images/earing.png"
+  "assets/images/earing.png",
 ];
+
 const obstacleImgs = [
+  "assets/images/obstacle_cart.png",
   "assets/images/obstacle_bag.png",
   "assets/images/obstacle_hanger.png",
-  "assets/images/obstacle_cart.png"
 ];
 
 function spawnCollectible() {
   const img = collectibleImgs[Math.floor(Math.random() * collectibleImgs.length)];
-  collectibles.push(new GameObject(img));
+  collectibles.push(new GameObject(img, 48));
 }
 
 function spawnObstacle() {
   const img = obstacleImgs[Math.floor(Math.random() * obstacleImgs.length)];
-  obstacles.push(new GameObject(img));
+  obstacles.push(new GameObject(img, 48));
 }
 
-function spawnFallingObstacle() {
-  const img = obstacleImgs[Math.floor(Math.random() * obstacleImgs.length)];
-  fallingObstacles.push(new GameObject(img, 48, true));
+function spawnFallingObstacles() {
+  fallingObstacles = true;
+  const interval = setInterval(() => {
+    const img = obstacleImgs[Math.floor(Math.random() * obstacleImgs.length)];
+    obstacles.push(new GameObject(img, 48, true));
+  }, 300);
+  setTimeout(() => {
+    clearInterval(interval);
+    fallingObstacles = false;
+  }, 3000);
 }
 
 function drawBackground() {
@@ -159,65 +171,75 @@ function drawBackground() {
   ctx.drawImage(bgImage, bgX + bgImage.width, 0, bgImage.width, CANVAS_HEIGHT);
 }
 
-function drawIntroOverlay() {
-  if (!gameStarted) {
-    ctx.fillStyle = "#FFFAFA";
-    ctx.font = "24px Cinzel Decorative";
-    ctx.textAlign = "center";
-    ctx.shadowColor = "black";
-    ctx.shadowBlur = 6;
-    ctx.fillText("Welcome to AURAGNAL Mystery Shopper", CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 20);
-    ctx.font = "18px Cinzel Decorative";
-    ctx.fillText("Collect, Dodge, Survive in Style.", CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 20);
-  }
-}
-
 function drawScore() {
-  ctx.fillStyle = "#FFFAFA";
+  ctx.fillStyle = "#ffffff";
   ctx.font = "20px Cinzel Decorative";
-  ctx.textAlign = "left";
   ctx.fillText(`Score: ${score}`, 20, 30);
   ctx.fillText(`High Score: ${highScore}`, 20, 60);
+}
+
+function drawIntro() {
+  ctx.fillStyle = "#000";
+  ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+  ctx.fillStyle = "#FFFAFA";
+  ctx.font = "26px Cinzel Decorative";
+  ctx.textAlign = "center";
+  ctx.shadowColor = "#222";
+  ctx.shadowBlur = 10;
+  ctx.fillText(
+    "Welcome to AURAGNAL Mystery Shopper",
+    CANVAS_WIDTH / 2,
+    CANVAS_HEIGHT / 2 - 20
+  );
+  ctx.font = "18px Cinzel Decorative";
+  ctx.fillText("Collect, Dodge, Survive in Style.", CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 20);
 }
 
 function drawGameOver() {
   ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
   ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-  ctx.fillStyle = "#FFFAFA";
-  ctx.font = "26px Cinzel Decorative";
+  ctx.fillStyle = "#588749";
+  ctx.font = "30px Cinzel Decorative";
   ctx.textAlign = "center";
   ctx.fillText("Game Over!", CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 30);
   ctx.fillText(`Score: ${score}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 10);
-  tryAgainBtn.style.display = "block";
+  setTimeout(() => tryAgainBtn.classList.remove("hidden"), 1000);
 }
 
 function resetGame() {
   gameOver = false;
-  isPaused = false;
-  gameSpeed = 4;
   score = 0;
+  gameSpeed = 4;
+  frameCount = 0;
   collectibles = [];
   obstacles = [];
-  fallingObstacles = [];
   player.isDead = false;
   player.state = 0;
-  player.y = CANVAS_HEIGHT - 96 * player.scale - 40;
-  tryAgainBtn.style.display = "none";
+  player.y = CANVAS_HEIGHT - player.height - 40;
+  tryAgainBtn.classList.add("hidden");
   mobileControls.classList.remove("hidden");
   requestAnimationFrame(gameLoop);
 }
 
 function gameLoop() {
-  if (gameOver || isPaused) return;
   ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+  if (!gameStarted) {
+    drawIntro();
+    return;
+  }
+
+  if (gameOver || isPaused) {
+    if (gameOver) drawGameOver();
+    return;
+  }
+
   drawBackground();
-  drawIntroOverlay();
   player.update();
   player.draw();
 
   if (frameCount % 140 === 0) spawnCollectible();
   if (frameCount % 220 === 0) spawnObstacle();
-  if (dropObstaclesActive && frameCount % 20 === 0) spawnFallingObstacle();
 
   collectibles.forEach((c, i) => {
     c.update();
@@ -230,7 +252,7 @@ function gameLoop() {
     }
   });
 
-  [...obstacles, ...fallingObstacles].forEach((o, i, arr) => {
+  obstacles.forEach((o, i) => {
     o.update();
     o.draw();
     if (o.collides(player)) {
@@ -238,20 +260,17 @@ function gameLoop() {
       gameOver = true;
       highScore = Math.max(highScore, score);
       localStorage.setItem("auragnalHighScore", highScore);
-      setTimeout(drawGameOver, 600);
     }
   });
 
   drawScore();
-
-  if (score % 50 === 0 && score !== 0 && frameCount % 10 === 0) {
-    gameSpeed += 0.1;
-    if (!dropObstaclesActive) {
-      dropObstaclesActive = true;
-      setTimeout(() => (dropObstaclesActive = false), 3000);
-    }
-  }
   frameCount++;
+
+  if (score % 50 === 0 && score !== 0 && frameCount % 5 === 0) {
+    gameSpeed += 0.1;
+    if (!fallingObstacles) spawnFallingObstacles();
+  }
+
   requestAnimationFrame(gameLoop);
 }
 
@@ -265,8 +284,11 @@ startBtn.onclick = () => {
 };
 
 tryAgainBtn.onclick = () => {
-  tryAgainBtn.style.display = "none";
+  gameStarted = true;
+  startBtn.style.display = "none";
+  letsShopBtn.style.display = "none";
   mobileControls.classList.remove("hidden");
+  if (!isMuted) sounds.music.play();
   resetGame();
 };
 
@@ -277,8 +299,7 @@ letsShopBtn.onclick = () => {
 muteBtn.onclick = () => {
   isMuted = !isMuted;
   muteBtn.textContent = isMuted ? "🔇" : "🔊";
-  if (isMuted) sounds.music.pause();
-  else if (gameStarted) sounds.music.play();
+  sounds.music.volume = isMuted ? 0 : 1;
 };
 
 pauseBtn.onclick = () => {
@@ -287,16 +308,12 @@ pauseBtn.onclick = () => {
   if (!isPaused) requestAnimationFrame(gameLoop);
 };
 
+mobileUp.onmousedown = mobileUp.ontouchstart = () => player.jump();
+mobileLeft.onmousedown = mobileLeft.ontouchstart = () => player.moveLeft();
+mobileRight.onmousedown = mobileRight.ontouchstart = () => player.moveRight();
+
 window.addEventListener("keydown", (e) => {
-  if (e.code === "ArrowUp" || e.code === "KeyW") player.jump();
-  if (e.code === "ArrowLeft" || e.code === "KeyA") player.move("left");
-  if (e.code === "ArrowRight" || e.code === "KeyD") player.move("right");
+  if (["ArrowUp", "Space", "KeyW"].includes(e.code)) player.jump();
+  if (["ArrowLeft", "KeyA"].includes(e.code)) player.moveLeft();
+  if (["ArrowRight", "KeyD"].includes(e.code)) player.moveRight();
 });
-
-mobileUp.onmousedown = () => player.jump();
-mobileLeft.onmousedown = () => player.move("left");
-mobileRight.onmousedown = () => player.move("right");
-
-mobileUp.ontouchstart = (e) => { e.preventDefault(); player.jump(); };
-mobileLeft.ontouchstart = (e) => { e.preventDefault(); player.move("left"); };
-mobileRight.ontouchstart = (e) => { e.preventDefault(); player.move("right"); };
