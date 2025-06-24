@@ -9,22 +9,24 @@
   <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&display=swap" rel="stylesheet" />
 </head>
 <body>
+  <h1 id="game-title">Welcome to Mystery Shopper</h1>
 
-  <h1 id="game-title">Mystery Shopper</h1>
+  <div id="mute-container">
+    <button id="muteBtn">🔊</button>
+  </div>
 
-  <div id="game-wrapper">
-    <div id="mute-container">
-      <button id="muteBtn">🔊</button>
-    </div>
+  <div id="game-frame">
+    <canvas id="gameCanvas"></canvas>
+  </div>
 
-    <div id="game-frame">
-      <canvas id="gameCanvas"></canvas>
-    </div>
+  <div id="button-container">
+    <button id="startBtn">Start Game</button>
+    <button id="lets-shop">Let's Shop Instead</button>
+  </div>
 
-    <div id="button-container">
-      <button id="startBtn">Start Game</button>
-      <button id="lets-shop">Let's Shop Instead</button>
-    </div>
+  <!-- New Try Again Button -->
+  <div id="try-again-container" style="display: none;">
+    <button id="tryAgainBtn">Try Again</button>
   </div>
 
   <script src="game.js"></script>
