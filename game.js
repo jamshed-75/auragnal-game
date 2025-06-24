@@ -45,7 +45,7 @@ muteBtn.addEventListener("click", () => {
 
 // Background
 const bgImage = new Image();
-bgImage.src = "assets/images/bg_loop.jpg"; // your 6120x1440 futuristic background
+bgImage.src = "assets/images/bg_loop.png"; // your 6120x1440 futuristic background
 let bgX = 0;
 
 // Cart Character Frames
