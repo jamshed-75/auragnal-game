@@ -13,11 +13,12 @@
 
   <div id="mute-container">
     <button id="muteBtn">🔊</button>
+    <button id="pauseBtn">⏸️</button>
   </div>
 
   <div id="game-frame">
     <canvas id="gameCanvas"></canvas>
-    <button id="tryAgainBtn" class="hidden">Try Again 🔁</button>
+    <button id="tryAgainBtn" class="hidden">Try Again</button>
   </div>
 
   <div id="button-container">
@@ -28,17 +29,12 @@
   <!-- Mobile Controls -->
   <div id="mobile-controls" class="hidden">
     <div class="up-row">
-      <button id="mobile-up">⬆️</button>
+      <button id="mobile-up" class="arrow-btn">↑</button>
     </div>
     <div class="left-right-row">
-      <button id="mobile-left">⬅️</button>
-      <button id="mobile-right">➡️</button>
+      <button id="mobile-left" class="arrow-btn">←</button>
+      <button id="mobile-right" class="arrow-btn">→</button>
     </div>
-  </div>
-
-  <div id="scoreboard">
-    <p>Score: <span id="score">0</span></p>
-    <p>High Score: <span id="highScore">0</span></p>
   </div>
 
   <script src="game.js"></script>
