@@ -1,53 +1,26 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
-const startBtn = document.getElementById("startBtn");
-const letsShopBtn = document.getElementById("lets-shop");
-const gameTitle = document.getElementById("game-title");
-const muteBtn = document.getElementById("muteBtn");
-
-let gameStarted = false;
-let gameOver = false;
-let isMuted = false;
-let score = 0;
-let frameCount = 0;
-let gameSpeed = 4;
-const gravity = 1.2;
 
 const CANVAS_WIDTH = 960;
 const CANVAS_HEIGHT = 540;
 canvas.width = CANVAS_WIDTH;
 canvas.height = CANVAS_HEIGHT;
 
-// Sounds
-const sounds = {
-  start: new Audio("assets/sound/start.mp3"),
-  collect: new Audio("assets/sound/collect.ogg"),
-  jump: new Audio("assets/sound/jump.wav"),
-  death: new Audio("assets/sound/death.wav"),
-  game: new Audio("assets/sound/game.wav"),
-};
-sounds.game.loop = true;
+let gameSpeed = 4;
+let frameCount = 0;
+let score = 0;
+let gameStarted = false;
+let gameOver = false;
+let isMuted = false;
 
-function playSound(sound) {
-  if (!isMuted) {
-    sounds[sound].currentTime = 0;
-    sounds[sound].play();
-  }
-}
-
-muteBtn.addEventListener("click", () => {
-  isMuted = !isMuted;
-  muteBtn.textContent = isMuted ? "🔇" : "🔊";
-  if (isMuted) sounds.game.pause();
-  else if (gameStarted) sounds.game.play();
-});
-
-// Background
 const bgImage = new Image();
-bgImage.src = "assets/images/mall_background_6120x1440.png";
+bgImage.src = "assets/images/bg_loop.png"; // 6120x1440 background
+const BG_WIDTH = 6120;
 let bgX = 0;
 
-// Cart Frames
+// 🎵 Sound Setup
+// (keep your existing sounds setup and mute logic)
+
 const cartFrames = [
   "cart_empty.png",
   "cart_partial.png",
@@ -61,25 +34,36 @@ const cartFrames = [
 
 class Player {
   constructor() {
-    this.scale = 0.5;
+    this.frameWidth = 56;
+    this.frameHeight = 56;
+    this.scale = 1.2;
     this.x = 80;
-    this.y = CANVAS_HEIGHT - 140;
+    this.y = CANVAS_HEIGHT - this.frameHeight * this.scale - 40;
     this.dy = 0;
     this.jumpPower = -18;
     this.grounded = true;
     this.isDead = false;
+    this.currentFrame = 0;
+    this.frameTimer = 0;
+    this.frameSpeed = 15;
   }
 
   update() {
-    this.dy += gravity;
+    this.dy += 1.2; // gravity
     this.y += this.dy;
 
-    if (this.y + 100 >= CANVAS_HEIGHT - 40) {
-      this.y = CANVAS_HEIGHT - 100 - 40;
+    if (this.y + this.frameHeight * this.scale >= CANVAS_HEIGHT - 40) {
+      this.y = CANVAS_HEIGHT - this.frameHeight * this.scale - 40;
       this.dy = 0;
       this.grounded = true;
     } else {
       this.grounded = false;
+    }
+
+    this.frameTimer++;
+    if (this.frameTimer >= this.frameSpeed) {
+      this.currentFrame = (this.currentFrame + 1) % 3;
+      this.frameTimer = 0;
     }
   }
 
@@ -87,24 +71,28 @@ class Player {
     if (this.grounded && !this.isDead) {
       this.dy = this.jumpPower;
       this.grounded = false;
-      playSound("jump");
+    }
+  }
+
+  draw() {
+    const img = cartFrames[this.isDead ? 3 : score >= 30 ? 2 : score >= 10 ? 1 : 0];
+    if (img.complete) {
+      ctx.drawImage(
+        img,
+        0,
+        0,
+        this.frameWidth,
+        this.frameHeight,
+        this.x,
+        this.y,
+        this.frameWidth * this.scale,
+        this.frameHeight * this.scale
+      );
     }
   }
 
   die() {
     this.isDead = true;
-  }
-
-  draw() {
-    let img;
-    if (this.isDead) img = cartFrames[3];
-    else if (score >= 60) img = cartFrames[2];
-    else if (score >= 30) img = cartFrames[1];
-    else img = cartFrames[0];
-
-    if (img.complete) {
-      ctx.drawImage(img, this.x, this.y, img.width * this.scale, img.height * this.scale);
-    }
   }
 }
 
@@ -129,19 +117,16 @@ class GameObject {
   }
 
   collides(player) {
-    const px = player.x;
-    const py = player.y;
-    const pw = 80;
-    const ph = 80;
-    return (
-      px < this.x + this.width &&
-      px + pw > this.x &&
-      py < this.y + this.height &&
-      py + ph > this.y
+    return !(
+      player.x + 10 > this.x + this.width - 10 ||
+      player.x + player.frameWidth * player.scale - 10 < this.x + 10 ||
+      player.y + 10 > this.y + this.height - 10 ||
+      player.y + player.frameHeight * player.scale - 10 < this.y + 10
     );
   }
 }
 
+// Game variables
 const player = new Player();
 let collectibles = [];
 let obstacles = [];
@@ -150,66 +135,62 @@ const collectibleImgs = [
   "assets/images/dress.png",
   "assets/images/heels.png",
   "assets/images/handbag.png",
-  "assets/images/earing.png",
+  "assets/images/earing.png"
 ];
 const obstacleImgs = [
   "assets/images/obstacle_cart.png",
   "assets/images/obstacle_bag.png",
-  "assets/images/obstacle_hanger.png",
+  "assets/images/obstacle_hanger.png"
 ];
 
 function spawnCollectible() {
   const img = collectibleImgs[Math.floor(Math.random() * collectibleImgs.length)];
-  collectibles.push(new GameObject(img, 36, 36));
+  collectibles.push(new GameObject(img, 32, 32));
 }
 
 function spawnObstacle() {
   const img = obstacleImgs[Math.floor(Math.random() * obstacleImgs.length)];
-  obstacles.push(new GameObject(img, 42, 42));
-}
-
-function drawScore() {
-  ctx.font = "20px Cinzel Decorative, cursive";
-  ctx.fillStyle = "#588749";
-  ctx.fillText(`Score: ${score}`, 40, 40);
+  obstacles.push(new GameObject(img, 40, 40));
 }
 
 function drawBackground() {
   bgX -= gameSpeed * 0.5;
-  if (bgX <= -CANVAS_WIDTH) bgX = 0;
-  ctx.drawImage(bgImage, bgX, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-  ctx.drawImage(bgImage, bgX + CANVAS_WIDTH, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+  if (bgX <= -BG_WIDTH) bgX = 0;
+  ctx.drawImage(bgImage, bgX, 0, BG_WIDTH, CANVAS_HEIGHT);
+  ctx.drawImage(bgImage, bgX + BG_WIDTH, 0, BG_WIDTH, CANVAS_HEIGHT);
+}
+
+function drawScore() {
+  ctx.font = "20px Cinzel Decorative";
+  ctx.fillStyle = "#588749";
+  ctx.fillText(`Score: ${score}`, 40, 40);
 }
 
 function drawGameOver() {
-  ctx.fillStyle = "rgba(0,0,0,0.7)";
+  ctx.fillStyle = "rgba(0,0,0,0.6)";
   ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
   ctx.fillStyle = "#588749";
-  ctx.font = "32px Cinzel Decorative";
+  ctx.font = "28px Cinzel Decorative";
   ctx.textAlign = "center";
   ctx.fillText("Game Over!", CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 20);
-  ctx.font = "20px Cinzel Decorative";
   ctx.fillText(`Score: ${score}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 20);
-  ctx.fillText("Tap or Press Start to Try Again", CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 60);
+  ctx.fillText("Press Start or Tap to Restart", CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 60);
 }
 
 function resetGame() {
-  gameOver = false;
-  gameSpeed = 4;
   score = 0;
-  collectibles = [];
-  obstacles = [];
-  player.y = CANVAS_HEIGHT - 100 - 40;
+  gameOver = false;
+  player.y = CANVAS_HEIGHT - player.frameHeight * player.scale - 40;
   player.dy = 0;
   player.isDead = false;
-  playSound("game");
+  collectibles = [];
+  obstacles = [];
   requestAnimationFrame(gameLoop);
 }
 
 function gameLoop() {
   if (gameOver) {
     drawGameOver();
-    sounds.game.pause();
     return;
   }
 
@@ -227,7 +208,6 @@ function gameLoop() {
     c.draw();
     if (c.collides(player)) {
       score += 10;
-      playSound("collect");
       collectibles.splice(i, 1);
     }
   });
@@ -237,46 +217,31 @@ function gameLoop() {
     o.draw();
     if (o.collides(player) && !player.isDead) {
       player.die();
-      playSound("death");
-      setTimeout(() => {
-        gameOver = true;
-      }, 1000);
+      setTimeout(() => (gameOver = true), 1000);
     }
   });
 
-  collectibles = collectibles.filter(c => !c.marked);
-  obstacles = obstacles.filter(o => !o.marked);
+  collectibles = collectibles.filter((c) => !c.marked);
+  obstacles = obstacles.filter((o) => !o.marked);
 
   drawScore();
   frameCount++;
   requestAnimationFrame(gameLoop);
 }
 
-window.addEventListener("keydown", (e) => {
-  if (["Space", "ArrowUp", "KeyW"].includes(e.code)) {
-    if (gameOver) resetGame();
-    else player.jump();
-  }
-});
-
-window.addEventListener("touchstart", () => {
-  if (gameOver) resetGame();
-  else player.jump();
-});
-
-window.addEventListener("mousedown", () => {
-  if (gameOver) resetGame();
-  else player.jump();
-});
-
-startBtn.addEventListener("click", () => {
-  if (!gameStarted) {
-    gameStarted = true;
-    playSound("start");
-  }
+// Controls
+document.getElementById("startBtn").addEventListener("click", () => {
+  if (!gameStarted) gameStarted = true;
   resetGame();
 });
 
-letsShopBtn.addEventListener("click", () => {
+document.getElementById("lets-shop").addEventListener("click", () => {
   window.location.href = "https://auragnal.com";
+});
+
+["keydown", "mousedown", "touchstart"].forEach((event) => {
+  window.addEventListener(event, () => {
+    if (gameOver) resetGame();
+    else player.jump();
+  });
 });
