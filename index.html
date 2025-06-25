@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>AURAGNAL Mystery Shopper</title>
-  <link rel="stylesheet" href="style.css" />
   <link rel="icon" href="assets/images/favicon.ico" />
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&display=swap" rel="stylesheet"/>
 </head>
 <body>
   <h1 id="game-title">Mystery Shopper</h1>
@@ -18,12 +18,10 @@
 
   <div id="game-frame">
     <canvas id="gameCanvas"></canvas>
-
-    <div id="gameOverlay" class="overlay">
+    <div id="game-overlay" class="overlay">
       <p class="intro-text">Welcome to AURAGNAL Mystery Shopper — Collect, Dodge, Survive in Style.</p>
-      <p class="controls-info">Desktop: ⬅️ ➡️ ⬆️ (Arrow Keys), Enter = Restart<br>Mobile: Use ⬅️ ⬆️ ➡️ buttons below</p>
+      <p class="control-text">Controls: Arrow Keys / Tap Buttons — ⬅️ for reverse, ⬆️ for jump, ➡️ for forward</p>
     </div>
-
     <button id="tryAgainBtn" class="hidden">Try Again</button>
   </div>
 
@@ -32,13 +30,14 @@
     <button id="lets-shop">Let's Shop Instead</button>
   </div>
 
+  <!-- Mobile Controls -->
   <div id="mobile-controls" class="hidden">
     <div class="up-row">
-      <button id="mobile-up" class="arrow-btn">▲</button>
+      <button id="mobile-up" class="arrow-btn">↑</button>
     </div>
     <div class="left-right-row">
-      <button id="mobile-left" class="arrow-btn">◀</button>
-      <button id="mobile-right" class="arrow-btn">▶</button>
+      <button id="mobile-left" class="arrow-btn">←</button>
+      <button id="mobile-right" class="arrow-btn">→</button>
     </div>
   </div>
 
