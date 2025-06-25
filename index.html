@@ -4,59 +4,53 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>AURAGNAL Mystery Shopper</title>
-  <link rel="stylesheet" href="style.css" />
   <link rel="icon" href="assets/images/favicon.ico" />
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <div class="auragnal-container">
+    <h1 class="game-heading">WeLcome To AURAGNAL</h1>
+    <p class="game-subheading">Mystery Shopper</p>
+    <p class="game-tagline">Collect, Dodge, Survive In Style</p>
 
-  <!-- Game Title -->
-  <h1 id="game-title">Mystery Shopper</h1>
-
-  <!-- Desktop Controls (Only Visible on Desktop) -->
-  <div id="desktop-instructions" class="desktop-only">
-    ⬆️ Jump &nbsp;&nbsp; ⬅️ Reverse &nbsp;&nbsp; ➡️ Forward &nbsp;&nbsp; ⏎ Restart
-  </div>
-
-  <!-- Mute & Pause Buttons -->
-  <div id="control-bar">
-    <button id="muteBtn">🔊</button>
-    <button id="pauseBtn">⏸️</button>
-  </div>
-
-  <!-- Game Box -->
-  <div id="game-frame">
-    <canvas id="gameCanvas"></canvas>
+    <!-- Game Overlay Instructions -->
     <div id="gameOverlay" class="overlay">
-      <h2>WeLcome To AURAGNAL</h2>
-      <p>Mystery Shopper</p>
-      <p class="sub">Collect, Dodge, Survive In Style</p>
+      <p id="controls-instructions" class="controls-desktop-only">
+        ⬅️ Move Left &nbsp;&nbsp; ⬆️ Jump &nbsp;&nbsp; ➡️ Move Right &nbsp;&nbsp; ⏎ Restart
+      </p>
     </div>
-    <div id="gameScoreDisplay">
-      <span id="scoreText">Score: 0</span> |
-      <span id="highScoreText">High Score: 0</span>
+
+    <!-- Game Box -->
+    <div id="gameBox">
+      <canvas id="gameCanvas" width="960" height="540"></canvas>
+      
+      <div id="gameScoreDisplay">
+        <span>Score: <span id="score">0</span></span> |
+        <span>High Score: <span id="highScore">0</span></span>
+      </div>
+
+      <!-- Mobile Controls -->
+      <div id="mobileControls" class="hidden">
+        <button id="btnLeft">←</button>
+        <button id="btnUp">↑</button>
+        <button id="btnRight">→</button>
+      </div>
     </div>
-    <button id="tryAgainBtn" class="hidden">Try Again</button>
+
+    <!-- Game Buttons -->
+    <div class="buttons-wrapper">
+      <button id="startBtn" class="glow-button">Start Game</button>
+      <button id="tryAgainBtn" class="glow-button hidden">Try Again</button>
+      <button id="letsShopBtn" class="glow-button hidden">Let's Shop Instead</button>
+    </div>
+
+    <!-- Bottom Controls -->
+    <div class="bottom-controls">
+      <button id="muteBtn" class="glow-button">🔇</button>
+      <button id="pauseBtn" class="glow-button">⏸️</button>
+    </div>
   </div>
 
-  <!-- Action Buttons -->
-  <div id="button-container">
-    <button id="startBtn">Start Game</button>
-    <button id="lets-shop">Let's Shop Instead</button>
-  </div>
-
-  <!-- Mobile Arrows -->
-  <div id="mobile-controls" class="mobile-controls">
-    <div class="up-row">
-      <button id="upBtn">⬆️</button>
-    </div>
-    <div class="left-right-row">
-      <button id="leftBtn">⬅️</button>
-      <button id="rightBtn">➡️</button>
-    </div>
-  </div>
-
-  <!-- JS File -->
   <script src="game.js"></script>
 </body>
 </html>
