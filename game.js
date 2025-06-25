@@ -24,10 +24,12 @@ let gameSpeed = 4;
 let score = 0;
 let highScore = localStorage.getItem("auragnalHighScore") || 0;
 
+// Background
 const bgImage = new Image();
 bgImage.src = "assets/images/bg_loop.png";
 let bgX = 0;
 
+// Sounds
 const sounds = {
   jump: new Audio("assets/sound/jump.wav"),
   collect: new Audio("assets/sound/collect.ogg"),
@@ -36,12 +38,14 @@ const sounds = {
 };
 sounds.music.loop = true;
 
+// Cart frames
 const cartFrames = ["cart_empty.png", "cart_partial.png", "cart_full.png", "cart_broken.png"].map(name => {
   const img = new Image();
   img.src = `assets/cart/${name}`;
   return img;
 });
 
+// GameObject Class
 class GameObject {
   constructor(imgSrc, size = 56, falling = false) {
     this.image = new Image();
@@ -73,18 +77,19 @@ class GameObject {
   }
 }
 
+// Player Class
 class Player {
   constructor() {
-    this.scale = 0.12;
+    this.scale = 0.25; // 🔥 Bigger than last version
     this.x = 100;
+    this.y = CANVAS_HEIGHT - 380 * this.scale - 40;
     this.dy = 0;
-    this.jumpPower = -25;
-    this.state = 0;
-    this.isDead = false;
-    this.grounded = true;
     this.width = 405 * this.scale;
     this.height = 380 * this.scale;
-    this.y = CANVAS_HEIGHT - this.height - 40;
+    this.jumpPower = -25; // 🔥 More jump
+    this.grounded = true;
+    this.isDead = false;
+    this.state = 0;
   }
   update() {
     if (!this.isDead && !isPaused) {
@@ -102,6 +107,8 @@ class Player {
   draw() {
     const img = cartFrames[this.state];
     if (!img.complete) return;
+    this.width = img.width * this.scale;
+    this.height = img.height * this.scale;
     ctx.drawImage(img, this.x, this.y, this.width, this.height);
   }
   jump() {
@@ -143,12 +150,10 @@ function spawnCollectible() {
   const img = collectibleImgs[Math.floor(Math.random() * collectibleImgs.length)];
   collectibles.push(new GameObject(img, 48));
 }
-
 function spawnObstacle() {
   const img = obstacleImgs[Math.floor(Math.random() * obstacleImgs.length)];
   obstacles.push(new GameObject(img, 48));
 }
-
 function spawnFallingObstacles() {
   fallingObstacles = true;
   const interval = setInterval(() => {
@@ -171,22 +176,19 @@ function drawBackground() {
 function drawScore() {
   ctx.fillStyle = "#ffffff";
   ctx.font = "20px Cinzel Decorative";
+  ctx.textAlign = "left";
   ctx.fillText(`Score: ${score}`, 20, 30);
   ctx.fillText(`High Score: ${highScore}`, 20, 60);
 }
 
-function drawIntroOverlay() {
-  ctx.fillStyle = "#000000";
+function drawOverlay() {
+  ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
   ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
   ctx.fillStyle = "#FFFAFA";
-  ctx.font = "22px Cinzel Decorative";
+  ctx.font = "24px Cinzel Decorative";
   ctx.textAlign = "center";
-  ctx.textShadow = "2px 2px 8px #000";
-  ctx.fillText(
-    "Welcome to AURAGNAL Mystery Shopper — Collect, Dodge, Survive in Style.",
-    CANVAS_WIDTH / 2,
-    CANVAS_HEIGHT / 2
-  );
+  ctx.fillText("Welcome to AURAGNAL Mystery Shopper", CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 10);
+  ctx.fillText("Collect, Dodge, Survive in Style.", CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 30);
 }
 
 function drawGameOver() {
@@ -198,6 +200,7 @@ function drawGameOver() {
   ctx.fillText("Game Over!", CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 30);
   ctx.fillText(`Score: ${score}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 10);
   setTimeout(() => tryAgainBtn.classList.remove("hidden"), 1000);
+  mobileControls.classList.add("hidden");
 }
 
 function resetGame() {
@@ -216,21 +219,21 @@ function resetGame() {
 }
 
 function gameLoop() {
-  ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-  drawBackground();
-
   if (!gameStarted) {
-    drawIntroOverlay();
+    drawOverlay();
+    return requestAnimationFrame(gameLoop);
+  }
+  if (gameOver || isPaused) {
+    if (gameOver) drawGameOver();
     return;
   }
-
+  ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+  drawBackground();
   player.update();
   player.draw();
 
-  if (!gameOver) {
-    if (frameCount % 140 === 0) spawnCollectible();
-    if (frameCount % 220 === 0) spawnObstacle();
-  }
+  if (frameCount % 140 === 0) spawnCollectible();
+  if (frameCount % 220 === 0) spawnObstacle();
 
   collectibles.forEach((c, i) => {
     c.update();
@@ -265,6 +268,7 @@ function gameLoop() {
   requestAnimationFrame(gameLoop);
 }
 
+// Controls
 startBtn.onclick = () => {
   gameStarted = true;
   startBtn.style.display = "none";
@@ -273,48 +277,47 @@ startBtn.onclick = () => {
   if (!isMuted) sounds.music.play();
   resetGame();
 };
-
 tryAgainBtn.onclick = () => {
-  gameStarted = false;
-  startBtn.style.display = "inline-block";
-  letsShopBtn.style.display = "inline-block";
-  mobileControls.classList.add("hidden");
-  if (!isMuted) sounds.music.pause();
-  requestAnimationFrame(gameLoop);
+  gameStarted = true;
+  startBtn.style.display = "none";
+  letsShopBtn.style.display = "none";
+  mobileControls.classList.remove("hidden");
+  if (!isMuted) sounds.music.play();
+  resetGame();
 };
-
-letsShopBtn.onclick = () => {
-  window.location.href = "https://auragnal.com";
-};
-
+letsShopBtn.onclick = () => window.location.href = "https://auragnal.com";
 muteBtn.onclick = () => {
   isMuted = !isMuted;
   muteBtn.textContent = isMuted ? "🔇" : "🔊";
   sounds.music.volume = isMuted ? 0 : 1;
 };
-
 pauseBtn.onclick = () => {
   isPaused = !isPaused;
   pauseBtn.textContent = isPaused ? "▶️" : "⏸️";
   if (!isPaused) requestAnimationFrame(gameLoop);
 };
 
-let holdInterval;
-function holdButton(action) {
-  action();
-  holdInterval = setInterval(action, 100);
-}
-function releaseButton() {
-  clearInterval(holdInterval);
+// Multi-touch compatibility
+const holdStates = { up: false, left: false, right: false };
+function updateHeldButtons() {
+  if (holdStates.up) player.jump();
+  if (holdStates.left) player.moveLeft();
+  if (holdStates.right) player.moveRight();
+  if (holdStates.left || holdStates.right || holdStates.up) requestAnimationFrame(updateHeldButtons);
 }
 
-mobileUp.addEventListener("touchstart", () => holdButton(() => player.jump()));
-mobileUp.addEventListener("touchend", releaseButton);
-mobileLeft.addEventListener("touchstart", () => holdButton(() => player.moveLeft()));
-mobileLeft.addEventListener("touchend", releaseButton);
-mobileRight.addEventListener("touchstart", () => holdButton(() => player.moveRight()));
-mobileRight.addEventListener("touchend", releaseButton);
+mobileUp.addEventListener("touchstart", () => { holdStates.up = true; updateHeldButtons(); });
+mobileUp.addEventListener("touchend", () => holdStates.up = false);
+mobileLeft.addEventListener("touchstart", () => { holdStates.left = true; updateHeldButtons(); });
+mobileLeft.addEventListener("touchend", () => holdStates.left = false);
+mobileRight.addEventListener("touchstart", () => { holdStates.right = true; updateHeldButtons(); });
+mobileRight.addEventListener("touchend", () => holdStates.right = false);
 
+mobileUp.onclick = () => player.jump();
+mobileLeft.onclick = () => player.moveLeft();
+mobileRight.onclick = () => player.moveRight();
+
+// Keyboard support
 window.addEventListener("keydown", (e) => {
   if (["ArrowUp", "Space", "KeyW"].includes(e.code)) player.jump();
   if (["ArrowLeft", "KeyA"].includes(e.code)) player.moveLeft();
