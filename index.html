@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,22 +9,34 @@
   <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&display=swap" rel="stylesheet" />
 </head>
 <body>
-  <h1 id="game-title">Mystery Shopper</h1>  <div id="mute-container">
+  <h1 id="game-title">Mystery Shopper</h1>
+
+  <div id="mute-container">
     <button id="muteBtn">🔊</button>
     <button id="pauseBtn">⏸️</button>
-  </div>  <div id="game-frame">
+  </div>
+
+  <div id="game-frame">
     <canvas id="gameCanvas" class="overlay"></canvas>
     <button id="tryAgainBtn" class="hidden">Try Again</button>
-  </div>  <div id="button-container">
+  </div>
+
+  <div id="button-container">
     <button id="startBtn">Start Game</button>
     <button id="lets-shop">Let's Shop Instead</button>
-  </div>  <!-- Mobile Controls -->  <div id="mobile-controls" class="hidden">
+  </div>
+
+  <!-- Mobile Controls -->
+  <div id="mobile-controls" class="hidden">
     <div class="up-row">
-      <button id="mobile-up" class="arrow-btn">↑</button>
+      <button id="mobile-up" class="arrow-btn">▲</button>
     </div>
     <div class="left-right-row">
-      <button id="mobile-left" class="arrow-btn">←</button>
-      <button id="mobile-right" class="arrow-btn">→</button>
+      <button id="mobile-left" class="arrow-btn">◀</button>
+      <button id="mobile-right" class="arrow-btn">▶</button>
     </div>
-  </div>  <script src="game.js"></script></body>
+  </div>
+
+  <script src="game.js"></script>
+</body>
 </html>
