@@ -2,52 +2,58 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AURAGNAL Mystery Shopper</title>
-  <link rel="icon" href="assets/images/favicon.ico" />
   <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="assets/images/favicon.ico" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&display=swap" rel="stylesheet" />
 </head>
 <body>
-  <div class="auragnal-container">
-    <h1 class="game-heading">WeLcome To AURAGNAL</h1>
-    <p class="game-subheading">Mystery Shopper</p>
-    <p class="game-tagline">Collect, Dodge, Survive In Style</p>
+  <h1 id="game-title">Mystery Shopper</h1>
 
-    <!-- Game Overlay Instructions -->
+  <!-- Mute & Pause Buttons Under Game -->
+  <div id="bottom-controls">
+    <button id="muteBtn">🔊</button>
+    <button id="pauseBtn">⏸️</button>
+  </div>
+
+  <!-- Game Frame -->
+  <div id="game-frame">
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- Overlay Intro -->
     <div id="gameOverlay" class="overlay">
-      <p id="controls-instructions" class="controls-desktop-only">
-        ⬅️ Move Left &nbsp;&nbsp; ⬆️ Jump &nbsp;&nbsp; ➡️ Move Right &nbsp;&nbsp; ⏎ Restart
-      </p>
-    </div>
+      <h2>WeLcome To AURAGNAL</h2>
+      <h3>Mystery Shopper</h3>
+      <p class="tagline">Collect, Dodge, Survive In Style</p>
 
-    <!-- Game Box -->
-    <div id="gameBox">
-      <canvas id="gameCanvas" width="960" height="540"></canvas>
-      
-      <div id="gameScoreDisplay">
-        <span>Score: <span id="score">0</span></span> |
-        <span>High Score: <span id="highScore">0</span></span>
-      </div>
-
-      <!-- Mobile Controls -->
-      <div id="mobileControls" class="hidden">
-        <button id="btnLeft">←</button>
-        <button id="btnUp">↑</button>
-        <button id="btnRight">→</button>
+      <!-- Desktop Only Controls -->
+      <div class="controls-info desktop-only">
+        <p>↑ Jump | ← Reverse | → Forward | ⏎ Enter</p>
       </div>
     </div>
 
-    <!-- Game Buttons -->
-    <div class="buttons-wrapper">
-      <button id="startBtn" class="glow-button">Start Game</button>
-      <button id="tryAgainBtn" class="glow-button hidden">Try Again</button>
-      <button id="letsShopBtn" class="glow-button hidden">Let's Shop Instead</button>
-    </div>
+    <!-- Try Again -->
+    <button id="tryAgainBtn" class="hidden">Try Again</button>
 
-    <!-- Bottom Controls -->
-    <div class="bottom-controls">
-      <button id="muteBtn" class="glow-button">🔇</button>
-      <button id="pauseBtn" class="glow-button">⏸️</button>
+    <!-- Game Score -->
+    <div id="game-score" class="scoreDisplay">Score: 0 | High Score: 0</div>
+  </div>
+
+  <!-- Action Buttons -->
+  <div id="button-container">
+    <button id="startBtn">Start Game</button>
+    <button id="lets-shop" class="hidden">Let's Shop Instead</button>
+  </div>
+
+  <!-- Mobile Controls -->
+  <div id="mobile-controls" class="hidden">
+    <div class="up-row">
+      <button id="mobile-up" class="arrow-btn">↑</button>
+    </div>
+    <div class="left-right-row">
+      <button id="mobile-left" class="arrow-btn">←</button>
+      <button id="mobile-right" class="arrow-btn">→</button>
     </div>
   </div>
 
