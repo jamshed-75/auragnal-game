@@ -9,8 +9,7 @@ const mobileUp = document.getElementById("mobile-up");
 const mobileLeft = document.getElementById("mobile-left");
 const mobileRight = document.getElementById("mobile-right");
 const mobileControls = document.getElementById("mobile-controls");
-const gameOverlay = document.getElementById("gameOverlay");
-const gameScoreDisplay = document.getElementById("gameScoreDisplay");
+const gameOverlay = document.getElementById("game-overlay");
 
 const CANVAS_WIDTH = 960;
 const CANVAS_HEIGHT = 540;
@@ -25,11 +24,9 @@ let frameCount = 0;
 let gameSpeed = 4;
 let score = 0;
 let highScore = localStorage.getItem("auragnalHighScore") || 0;
-
 let fallingObstacles = false;
-let fallingInterval = null;
 
-// Background Image
+// Background
 const bgImage = new Image();
 bgImage.src = "assets/images/bg_loop.png";
 let bgX = 0;
@@ -43,7 +40,7 @@ const sounds = {
 };
 sounds.music.loop = true;
 
-// Cart Images
+// Cart frames
 const cartFrames = ["cart_empty.png", "cart_partial.png", "cart_full.png", "cart_broken.png"].map(name => {
   const img = new Image();
   img.src = `assets/cart/${name}`;
@@ -69,7 +66,6 @@ class GameObject {
     if (this.x + this.size < 0 || this.y > CANVAS_HEIGHT) this.marked = true;
   }
   draw() {
-    if (!this.image.complete) return;
     ctx.drawImage(this.image, this.x, this.y, this.size, this.size);
   }
   collides(player) {
@@ -84,13 +80,13 @@ class GameObject {
 
 class Player {
   constructor() {
-    this.scale = 0.12; // tuned for perfect size
+    this.scale = 0.12;
     this.x = 100;
     this.y = CANVAS_HEIGHT - 380 * this.scale - 40;
     this.dy = 0;
     this.width = 405 * this.scale;
     this.height = 380 * this.scale;
-    this.jumpPower = -22; // slightly stronger jump
+    this.jumpPower = -20;
     this.grounded = true;
     this.isDead = false;
     this.state = 0;
@@ -109,7 +105,7 @@ class Player {
     }
   }
   draw() {
-    const img = this.isDead ? cartFrames[3] : cartFrames[this.state];
+    const img = cartFrames[this.state];
     if (!img.complete) return;
     this.width = img.width * this.scale;
     this.height = img.height * this.scale;
@@ -128,7 +124,6 @@ class Player {
     if (!this.isDead) this.x = Math.min(CANVAS_WIDTH - this.width, this.x + 10);
   }
   die() {
-    if (this.isDead) return;
     this.isDead = true;
     this.state = 3;
     if (!isMuted) sounds.death.play();
@@ -156,20 +151,18 @@ function spawnCollectible() {
   collectibles.push(new GameObject(img, 48));
 }
 
-function spawnObstacle() {
+function spawnObstacle(falling = false) {
   const img = obstacleImgs[Math.floor(Math.random() * obstacleImgs.length)];
-  obstacles.push(new GameObject(img, 48));
+  obstacles.push(new GameObject(img, 48, falling));
 }
 
 function spawnFallingObstacles() {
-  if (fallingObstacles) return; // prevent multiple spawns at once
   fallingObstacles = true;
-  fallingInterval = setInterval(() => {
-    const img = obstacleImgs[Math.floor(Math.random() * obstacleImgs.length)];
-    obstacles.push(new GameObject(img, 48, true));
+  const interval = setInterval(() => {
+    spawnObstacle(true);
   }, 300);
   setTimeout(() => {
-    clearInterval(fallingInterval);
+    clearInterval(interval);
     fallingObstacles = false;
   }, 3000);
 }
@@ -184,7 +177,6 @@ function drawBackground() {
 function drawScore() {
   ctx.fillStyle = "#ffffff";
   ctx.font = "20px Cinzel Decorative";
-  ctx.textAlign = "left";
   ctx.fillText(`Score: ${score}`, 20, 30);
   ctx.fillText(`High Score: ${highScore}`, 20, 60);
 }
@@ -197,10 +189,14 @@ function drawGameOver() {
   ctx.textAlign = "center";
   ctx.fillText("Game Over!", CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 30);
   ctx.fillText(`Score: ${score}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 10);
+  setTimeout(() => {
+    tryAgainBtn.classList.remove("hidden");
+    letsShopBtn.classList.remove("hidden");
+    mobileControls.classList.add("hidden");
+  }, 500);
 }
 
 function resetGame() {
-  gameOver = false;
   score = 0;
   gameSpeed = 4;
   frameCount = 0;
@@ -209,27 +205,16 @@ function resetGame() {
   player.isDead = false;
   player.state = 0;
   player.y = CANVAS_HEIGHT - player.height - 40;
-  tryAgainBtn.classList.add("hidden");
-  mobileControls.classList.remove("hidden");
-  letsShopBtn.classList.add("hidden");
-  gameOverlay.classList.add("hidden");
-  gameScoreDisplay.style.visibility = "visible";
+  gameOver = false;
   requestAnimationFrame(gameLoop);
 }
 
 function gameLoop() {
   if (gameOver || isPaused) {
-    if (gameOver) {
-      drawGameOver();
-      // Show try again and lets shop buttons after delay
-      setTimeout(() => {
-        tryAgainBtn.classList.remove("hidden");
-        mobileControls.classList.add("hidden");
-        letsShopBtn.classList.remove("hidden");
-      }, 500);
-    }
+    if (gameOver) drawGameOver();
     return;
   }
+
   ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
   drawBackground();
   player.update();
@@ -252,7 +237,7 @@ function gameLoop() {
   obstacles.forEach((o, i) => {
     o.update();
     o.draw();
-    if (o.collides(player) && !player.isDead) {
+    if (o.collides(player)) {
       player.die();
       gameOver = true;
       highScore = Math.max(highScore, score);
@@ -263,33 +248,30 @@ function gameLoop() {
   drawScore();
   frameCount++;
 
-  if (score !== 0 && score % 50 === 0 && frameCount % 5 === 0) {
+  if (score % 50 === 0 && score !== 0 && frameCount % 5 === 0) {
     gameSpeed += 0.1;
-    spawnFallingObstacles();
+    if (!fallingObstacles) spawnFallingObstacles();
   }
 
   requestAnimationFrame(gameLoop);
 }
 
-// Event Listeners
+// --- Button Events ---
 startBtn.onclick = () => {
   gameStarted = true;
   startBtn.style.display = "none";
   letsShopBtn.classList.add("hidden");
   gameOverlay.classList.add("hidden");
   mobileControls.classList.remove("hidden");
-  gameScoreDisplay.style.visibility = "visible";
   if (!isMuted) sounds.music.play();
   resetGame();
 };
 
 tryAgainBtn.onclick = () => {
-  gameStarted = true;
   tryAgainBtn.classList.add("hidden");
   letsShopBtn.classList.add("hidden");
   gameOverlay.classList.add("hidden");
   mobileControls.classList.remove("hidden");
-  gameScoreDisplay.style.visibility = "visible";
   if (!isMuted) sounds.music.play();
   resetGame();
 };
@@ -310,4 +292,34 @@ pauseBtn.onclick = () => {
   if (!isPaused) requestAnimationFrame(gameLoop);
 };
 
-//
+// --- Keyboard + Mobile Controls ---
+let keys = {};
+
+window.addEventListener("keydown", (e) => {
+  keys[e.code] = true;
+  if (["ArrowUp", "Space", "KeyW"].includes(e.code)) player.jump();
+  if (e.code === "Enter" && gameOver) tryAgainBtn.click();
+});
+window.addEventListener("keyup", (e) => {
+  keys[e.code] = false;
+});
+
+function handleKeys() {
+  if (keys["ArrowLeft"] || keys["KeyA"]) player.moveLeft();
+  if (keys["ArrowRight"] || keys["KeyD"]) player.moveRight();
+  requestAnimationFrame(handleKeys);
+}
+handleKeys();
+
+function enableTouch(btn, action) {
+  let interval;
+  btn.addEventListener("touchstart", () => {
+    action();
+    interval = setInterval(action, 100);
+  });
+  btn.addEventListener("touchend", () => clearInterval(interval));
+}
+
+enableTouch(mobileUp, () => player.jump());
+enableTouch(mobileLeft, () => player.moveLeft());
+enableTouch(mobileRight, () => player.moveRight());
