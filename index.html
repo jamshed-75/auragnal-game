@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>AURAGNAL Mystery Shopper</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="icon" href="assets/images/favicon.ico" />
@@ -17,29 +17,25 @@
     <button id="pauseBtn">⏸️</button>
   </div>
 
-  <!-- Game Box -->
+  <!-- Game Frame -->
   <div id="game-frame">
     <canvas id="gameCanvas"></canvas>
-
-    <!-- Game Overlay -->
+    
+    <!-- Game Overlay (Shown before start) -->
     <div id="gameOverlay" class="overlay">
-      <p class="intro-text">Welcome to <strong>AURAGNAL Mystery Shopper</strong><br />Collect, Dodge, Survive in Style.</p>
-      <p class="controls-info">Controls:<br />
-        Desktop – ⬅️ ⬆️ ➡️ or A W D / Arrow keys<br />
-        Mobile – Use on-screen buttons
-      </p>
+      <h2>Welcome to AURAGNAL Mystery Shopper</h2>
+      <p>Collect, Dodge, Survive in Style.</p>
+      <p class="controls-hint">Tap ⬅️ ⬆️ ➡️ to Move & Jump — Press Enter to Restart</p>
     </div>
 
-    <!-- Score Display -->
-    <div id="gameScoreDisplay">
-      <span id="scoreText">Score: 0</span> |
-      <span id="highScoreText">High Score: 0</span>
-    </div>
-
+    <!-- Try Again Button -->
     <button id="tryAgainBtn" class="hidden">Try Again</button>
   </div>
 
-  <!-- Main Menu -->
+  <!-- Score Display -->
+  <div id="scoreDisplay">Score: 0 | High Score: 0</div>
+
+  <!-- Start & Let's Shop Buttons -->
   <div id="button-container">
     <button id="startBtn">Start Game</button>
     <button id="lets-shop">Let’s Shop Instead</button>
@@ -48,11 +44,11 @@
   <!-- Mobile Controls -->
   <div id="mobile-controls" class="hidden">
     <div class="up-row">
-      <button id="mobile-up" class="arrow-btn">↑</button>
+      <button id="mobile-up" class="arrow-btn">⬆️</button>
     </div>
     <div class="left-right-row">
-      <button id="mobile-left" class="arrow-btn">←</button>
-      <button id="mobile-right" class="arrow-btn">→</button>
+      <button id="mobile-left" class="arrow-btn">⬅️</button>
+      <button id="mobile-right" class="arrow-btn">➡️</button>
     </div>
   </div>
 
