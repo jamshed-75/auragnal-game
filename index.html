@@ -3,41 +3,45 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AURAGNAL Mystery Shopper</title>
-  <link rel="icon" href="assets/images/favicon.ico" />
+  <title>AURAGNAL Game</title>
   <link rel="stylesheet" href="style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&display=swap" rel="stylesheet"/>
+  <link rel="icon" href="assets/images/favicon.ico" />
 </head>
 <body>
-  <h1 id="game-title">Mystery Shopper</h1>
+  <h1 id="game-title">🛒 AURAGNAL CART RUN</h1>
 
-  <div id="mute-container">
-    <button id="muteBtn">🔊</button>
-    <button id="pauseBtn">⏸️</button>
-  </div>
-
-  <div id="game-frame">
+  <div id="game-container">
     <canvas id="gameCanvas"></canvas>
+
+    <div id="game-score">Score: 0 | High Score: 0</div>
+
     <div id="game-overlay" class="overlay">
-      <p class="intro-text">Welcome to AURAGNAL Mystery Shopper — Collect, Dodge, Survive in Style.</p>
-      <p class="control-text">Controls: Arrow Keys / Tap Buttons — ⬅️ for reverse, ⬆️ for jump, ➡️ for forward</p>
+      <p class="intro-text">Welcome to AURAGNAL CART RUN!<br><br>
+      🎮 Controls:<br>
+      ↔️ Move with Arrow Keys or A/D<br>
+      ⬆️ Jump with Up Arrow / Space / W<br><br>
+      📱 On Mobile: Tap the buttons below<br><br>
+      Get ready to shop & slay obstacles!</p>
     </div>
-    <button id="tryAgainBtn" class="hidden">Try Again</button>
-  </div>
 
-  <div id="button-container">
-    <button id="startBtn">Start Game</button>
-    <button id="lets-shop">Let's Shop Instead</button>
-  </div>
-
-  <!-- Mobile Controls -->
-  <div id="mobile-controls" class="hidden">
-    <div class="up-row">
-      <button id="mobile-up" class="arrow-btn">↑</button>
+    <!-- Buttons -->
+    <div id="button-container">
+      <button id="startBtn">Start Game</button>
+      <button id="tryAgainBtn" class="hidden">Try Again</button>
+      <button id="lets-shop" class="hidden">Let’s Shop Instead</button>
     </div>
-    <div class="left-right-row">
-      <button id="mobile-left" class="arrow-btn">←</button>
-      <button id="mobile-right" class="arrow-btn">→</button>
+
+    <!-- Controls -->
+    <div id="utility-buttons">
+      <button id="pauseBtn">⏸️</button>
+      <button id="muteBtn">🔊</button>
+    </div>
+
+    <!-- Mobile Controls -->
+    <div id="mobile-controls" class="hidden">
+      <button id="mobile-left">⬅️</button>
+      <button id="mobile-up">⬆️</button>
+      <button id="mobile-right">➡️</button>
     </div>
   </div>
 
