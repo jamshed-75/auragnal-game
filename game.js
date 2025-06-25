@@ -75,16 +75,16 @@ class GameObject {
 
 class Player {
   constructor() {
-    this.scale = 0.13;
+    this.scale = 0.12;
     this.x = 100;
-    this.y = CANVAS_HEIGHT - 380 * this.scale - 40;
     this.dy = 0;
+    this.jumpPower = -25;
+    this.state = 0;
+    this.isDead = false;
+    this.grounded = true;
     this.width = 405 * this.scale;
     this.height = 380 * this.scale;
-    this.jumpPower = -20;
-    this.grounded = true;
-    this.isDead = false;
-    this.state = 0;
+    this.y = CANVAS_HEIGHT - this.height - 40;
   }
   update() {
     if (!this.isDead && !isPaused) {
@@ -102,8 +102,6 @@ class Player {
   draw() {
     const img = cartFrames[this.state];
     if (!img.complete) return;
-    this.width = img.width * this.scale;
-    this.height = img.height * this.scale;
     ctx.drawImage(img, this.x, this.y, this.width, this.height);
   }
   jump() {
@@ -135,7 +133,6 @@ const collectibleImgs = [
   "assets/images/handbag.png",
   "assets/images/earing.png",
 ];
-
 const obstacleImgs = [
   "assets/images/obstacle_cart.png",
   "assets/images/obstacle_bag.png",
@@ -178,21 +175,18 @@ function drawScore() {
   ctx.fillText(`High Score: ${highScore}`, 20, 60);
 }
 
-function drawIntro() {
-  ctx.fillStyle = "#000";
+function drawIntroOverlay() {
+  ctx.fillStyle = "#000000";
   ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
   ctx.fillStyle = "#FFFAFA";
-  ctx.font = "26px Cinzel Decorative";
+  ctx.font = "22px Cinzel Decorative";
   ctx.textAlign = "center";
-  ctx.shadowColor = "#222";
-  ctx.shadowBlur = 10;
+  ctx.textShadow = "2px 2px 8px #000";
   ctx.fillText(
-    "Welcome to AURAGNAL Mystery Shopper",
+    "Welcome to AURAGNAL Mystery Shopper — Collect, Dodge, Survive in Style.",
     CANVAS_WIDTH / 2,
-    CANVAS_HEIGHT / 2 - 20
+    CANVAS_HEIGHT / 2
   );
-  ctx.font = "18px Cinzel Decorative";
-  ctx.fillText("Collect, Dodge, Survive in Style.", CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 20);
 }
 
 function drawGameOver() {
@@ -223,23 +217,20 @@ function resetGame() {
 
 function gameLoop() {
   ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+  drawBackground();
 
   if (!gameStarted) {
-    drawIntro();
+    drawIntroOverlay();
     return;
   }
 
-  if (gameOver || isPaused) {
-    if (gameOver) drawGameOver();
-    return;
-  }
-
-  drawBackground();
   player.update();
   player.draw();
 
-  if (frameCount % 140 === 0) spawnCollectible();
-  if (frameCount % 220 === 0) spawnObstacle();
+  if (!gameOver) {
+    if (frameCount % 140 === 0) spawnCollectible();
+    if (frameCount % 220 === 0) spawnObstacle();
+  }
 
   collectibles.forEach((c, i) => {
     c.update();
@@ -284,12 +275,12 @@ startBtn.onclick = () => {
 };
 
 tryAgainBtn.onclick = () => {
-  gameStarted = true;
-  startBtn.style.display = "none";
-  letsShopBtn.style.display = "none";
-  mobileControls.classList.remove("hidden");
-  if (!isMuted) sounds.music.play();
-  resetGame();
+  gameStarted = false;
+  startBtn.style.display = "inline-block";
+  letsShopBtn.style.display = "inline-block";
+  mobileControls.classList.add("hidden");
+  if (!isMuted) sounds.music.pause();
+  requestAnimationFrame(gameLoop);
 };
 
 letsShopBtn.onclick = () => {
@@ -308,9 +299,21 @@ pauseBtn.onclick = () => {
   if (!isPaused) requestAnimationFrame(gameLoop);
 };
 
-mobileUp.onmousedown = mobileUp.ontouchstart = () => player.jump();
-mobileLeft.onmousedown = mobileLeft.ontouchstart = () => player.moveLeft();
-mobileRight.onmousedown = mobileRight.ontouchstart = () => player.moveRight();
+let holdInterval;
+function holdButton(action) {
+  action();
+  holdInterval = setInterval(action, 100);
+}
+function releaseButton() {
+  clearInterval(holdInterval);
+}
+
+mobileUp.addEventListener("touchstart", () => holdButton(() => player.jump()));
+mobileUp.addEventListener("touchend", releaseButton);
+mobileLeft.addEventListener("touchstart", () => holdButton(() => player.moveLeft()));
+mobileLeft.addEventListener("touchend", releaseButton);
+mobileRight.addEventListener("touchstart", () => holdButton(() => player.moveRight()));
+mobileRight.addEventListener("touchend", releaseButton);
 
 window.addEventListener("keydown", (e) => {
   if (["ArrowUp", "Space", "KeyW"].includes(e.code)) player.jump();
