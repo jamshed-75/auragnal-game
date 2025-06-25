@@ -80,7 +80,7 @@ class GameObject {
 
 class Player {
   constructor() {
-    this.scale = 0.9;
+    this.scale = 0.09;
     this.x = 100;
     this.y = CANVAS_HEIGHT - 380 * this.scale - 40;
     this.dy = 0;
