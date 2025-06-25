@@ -2,53 +2,43 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AURAGNAL Mystery Shopper</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AURAGNAL Mystery Shopper Game</title>
   <link rel="stylesheet" href="style.css" />
-  <link rel="icon" href="assets/images/favicon.ico" />
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&display=swap" rel="stylesheet" />
 </head>
 <body>
-  <h1 id="game-title">Mystery Shopper</h1>
+  <div id="game-wrapper">
+    <canvas id="gameCanvas" width="960" height="540"></canvas>
 
-  <!-- Mute & Pause -->
-  <div id="mute-container">
-    <button id="muteBtn">🔊</button>
-    <button id="pauseBtn">⏸️</button>
-  </div>
-
-  <!-- Game Frame -->
-  <div id="game-frame">
-    <canvas id="gameCanvas"></canvas>
-    
-    <!-- Game Overlay (Shown before start) -->
-    <div id="gameOverlay" class="overlay">
-      <h2>Welcome to AURAGNAL Mystery Shopper</h2>
+    <!-- Overlay message before game start -->
+    <div id="game-overlay" class="overlay">
+      <h2>Welcome to AURAGNAL Mystery Shopper —</h2>
       <p>Collect, Dodge, Survive in Style.</p>
-      <p class="controls-hint">Tap ⬅️ ⬆️ ➡️ to Move & Jump — Press Enter to Restart</p>
+      <h3>Controls:</h3>
+      <p>Desktop: ← ↑ → keys + Enter to restart</p>
+      <p>Mobile: Use on-screen buttons below</p>
     </div>
 
-    <!-- Try Again Button -->
-    <button id="tryAgainBtn" class="hidden">Try Again</button>
-  </div>
-
-  <!-- Score Display -->
-  <div id="scoreDisplay">Score: 0 | High Score: 0</div>
-
-  <!-- Start & Let's Shop Buttons -->
-  <div id="button-container">
-    <button id="startBtn">Start Game</button>
-    <button id="lets-shop">Let’s Shop Instead</button>
-  </div>
-
-  <!-- Mobile Controls -->
-  <div id="mobile-controls" class="hidden">
-    <div class="up-row">
-      <button id="mobile-up" class="arrow-btn">⬆️</button>
+    <!-- Score Container -->
+    <div id="score-container" class="score-box hidden">
+      <span id="score">Score: 0</span>
+      <span id="high-score">High Score: 0</span>
     </div>
-    <div class="left-right-row">
-      <button id="mobile-left" class="arrow-btn">⬅️</button>
-      <button id="mobile-right" class="arrow-btn">➡️</button>
+
+    <!-- Buttons -->
+    <div id="button-container">
+      <button id="startBtn" class="btn gold-btn">Start Game</button>
+      <button id="tryAgainBtn" class="btn gold-btn hidden">Try Again</button>
+      <button id="lets-shop" class="btn gold-btn hidden">Let's Shop Instead</button>
+      <button id="muteBtn" class="btn icon-btn">🔊</button>
+      <button id="pauseBtn" class="btn icon-btn">⏸️</button>
+    </div>
+
+    <!-- Mobile Controls -->
+    <div id="mobile-controls" class="mobile-controls hidden">
+      <button id="mobile-left" class="mobile-btn">←</button>
+      <button id="mobile-up" class="mobile-btn">↑</button>
+      <button id="mobile-right" class="mobile-btn">→</button>
     </div>
   </div>
 
