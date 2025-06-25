@@ -1,7 +1,6 @@
-// game.js (vPolished with collision, speed, reset, falling fixes)
-
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
+
 const startBtn = document.getElementById("startBtn");
 const letsShopBtn = document.getElementById("lets-shop");
 const muteBtn = document.getElementById("muteBtn");
@@ -12,7 +11,7 @@ const mobileLeft = document.getElementById("mobile-left");
 const mobileRight = document.getElementById("mobile-right");
 const mobileControls = document.getElementById("mobile-controls");
 const gameOverlay = document.getElementById("game-overlay");
-const gameScoreDisplay = document.getElementById("game-score");
+const gameScoreDisplay = document.getElementById("gameScoreDisplay");
 
 const CANVAS_WIDTH = 960;
 const CANVAS_HEIGHT = 540;
@@ -24,12 +23,12 @@ let isPaused = false;
 let gameStarted = false;
 let gameOver = false;
 let frameCount = 0;
-let gameSpeed = 5.5; // ⬅️ Slightly faster default
+let gameSpeed = 4;
 let score = 0;
 let highScore = localStorage.getItem("auragnalHighScore") || 0;
 let fallingObstacles = false;
 
-// Background
+// Load assets
 const bgImage = new Image();
 bgImage.src = "assets/images/bg_loop.png";
 let bgX = 0;
@@ -43,64 +42,26 @@ const sounds = {
 };
 sounds.music.loop = true;
 
-// Cart Frames
 const cartFrames = ["cart_empty.png", "cart_partial.png", "cart_full.png", "cart_broken.png"].map(name => {
   const img = new Image();
   img.src = `assets/cart/${name}`;
   return img;
 });
 
-// GameObject
-class GameObject {
-  constructor(imgSrc, size = 56, falling = false) {
-    this.image = new Image();
-    this.image.src = imgSrc;
-    this.size = size;
-    this.x = CANVAS_WIDTH + Math.random() * 300 + 200;
-    this.y = falling ? -size : CANVAS_HEIGHT - size - 40;
-    this.falling = falling;
-    this.marked = false;
-  }
-
-  update() {
-    if (this.falling) {
-      this.y += gameSpeed;
-    } else {
-      this.x -= gameSpeed;
-    }
-    if (this.x + this.size < 0 || this.y > CANVAS_HEIGHT) this.marked = true;
-  }
-
-  draw() {
-    ctx.drawImage(this.image, this.x, this.y, this.size, this.size);
-  }
-
-  collides(player) {
-    const buffer = 10;
-    return !(
-      player.x + player.width - buffer < this.x ||
-      player.x + buffer > this.x + this.size ||
-      player.y + player.height - buffer < this.y ||
-      player.y + buffer > this.y + this.size
-    );
-  }
-}
-
-// Player
+// Player class
 class Player {
   constructor() {
-    this.scale = 0.09; // ✅ Your manual tweak
+    this.scale = 0.09;
     this.x = 100;
     this.y = CANVAS_HEIGHT - 380 * this.scale - 40;
     this.dy = 0;
     this.width = 405 * this.scale;
     this.height = 380 * this.scale;
-    this.jumpPower = -24; // ✅ Your manual tweak
+    this.jumpPower = -24;
     this.grounded = true;
     this.isDead = false;
     this.state = 0;
   }
-
   update() {
     if (!this.isDead && !isPaused) {
       this.dy += 1.1;
@@ -114,29 +75,22 @@ class Player {
       }
     }
   }
-
   draw() {
     const img = cartFrames[this.state];
-    this.width = img.width * this.scale;
-    this.height = img.height * this.scale;
     ctx.drawImage(img, this.x, this.y, this.width, this.height);
   }
-
   jump() {
     if (this.grounded && !this.isDead) {
       this.dy = this.jumpPower;
       if (!isMuted) sounds.jump.play();
     }
   }
-
   moveLeft() {
     if (!this.isDead) this.x = Math.max(0, this.x - 10);
   }
-
   moveRight() {
     if (!this.isDead) this.x = Math.min(CANVAS_WIDTH - this.width, this.x + 10);
   }
-
   die() {
     this.isDead = true;
     this.state = 3;
@@ -144,6 +98,38 @@ class Player {
   }
 }
 
+class GameObject {
+  constructor(imgSrc, size = 48, falling = false) {
+    this.image = new Image();
+    this.image.src = imgSrc;
+    this.size = size;
+    this.x = CANVAS_WIDTH + Math.random() * 300 + 200;
+    this.y = falling ? -size : CANVAS_HEIGHT - size - 40;
+    this.falling = falling;
+    this.marked = false;
+  }
+  update() {
+    if (this.falling) {
+      this.y += gameSpeed;
+    } else {
+      this.x -= gameSpeed;
+    }
+    if (this.x + this.size < 0 || this.y > CANVAS_HEIGHT) this.marked = true;
+  }
+  draw() {
+    ctx.drawImage(this.image, this.x, this.y, this.size, this.size);
+  }
+  collides(player) {
+    return !(
+      player.x > this.x + this.size ||
+      player.x + player.width < this.x ||
+      player.y > this.y + this.size ||
+      player.y + player.height < this.y
+    );
+  }
+}
+
+// Init game objects
 const player = new Player();
 let collectibles = [];
 let obstacles = [];
@@ -153,28 +139,25 @@ const collectibleImgs = [
   "assets/images/handbag.png",
   "assets/images/earing.png",
 ];
-
 const obstacleImgs = [
   "assets/images/obstacle_cart.png",
   "assets/images/obstacle_bag.png",
   "assets/images/obstacle_hanger.png",
 ];
 
+// Spawn helpers
 function spawnCollectible() {
   const img = collectibleImgs[Math.floor(Math.random() * collectibleImgs.length)];
   collectibles.push(new GameObject(img, 48));
 }
-
-function spawnObstacle() {
+function spawnObstacle(falling = false) {
   const img = obstacleImgs[Math.floor(Math.random() * obstacleImgs.length)];
-  obstacles.push(new GameObject(img, 48));
+  obstacles.push(new GameObject(img, 48, falling));
 }
-
 function spawnFallingObstacles() {
   fallingObstacles = true;
   const interval = setInterval(() => {
-    const img = obstacleImgs[Math.floor(Math.random() * obstacleImgs.length)];
-    obstacles.push(new GameObject(img, 48, true));
+    spawnObstacle(true);
   }, 300);
   setTimeout(() => {
     clearInterval(interval);
@@ -182,70 +165,68 @@ function spawnFallingObstacles() {
   }, 3000);
 }
 
+// Drawing
 function drawBackground() {
   bgX -= gameSpeed * 0.5;
   if (bgX <= -bgImage.width) bgX = 0;
   ctx.drawImage(bgImage, bgX, 0, bgImage.width, CANVAS_HEIGHT);
   ctx.drawImage(bgImage, bgX + bgImage.width, 0, bgImage.width, CANVAS_HEIGHT);
 }
-
 function drawScore() {
   ctx.fillStyle = "#ffffff";
   ctx.font = "20px Cinzel Decorative";
-  ctx.textAlign = "left";
   ctx.fillText(`Score: ${score}`, 20, 30);
   ctx.fillText(`High Score: ${highScore}`, 20, 60);
 }
-
 function drawGameOver() {
-  ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
+  ctx.fillStyle = "rgba(0,0,0,0.6)";
   ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
   ctx.fillStyle = "#FFFAFA";
   ctx.font = "30px Cinzel Decorative";
   ctx.textAlign = "center";
   ctx.fillText("Game Over!", CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 30);
   ctx.fillText(`Score: ${score}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 10);
-  setTimeout(() => {
-    tryAgainBtn.classList.remove("hidden");
-    letsShopBtn.classList.remove("hidden");
-    mobileControls.classList.add("hidden");
-  }, 800);
+  tryAgainBtn.classList.remove("hidden");
+  letsShopBtn.classList.remove("hidden");
 }
 
+// Reset game
 function resetGame() {
   gameOver = false;
-  gameStarted = true;
   score = 0;
-  gameSpeed = 5.5;
+  gameSpeed = 4;
   frameCount = 0;
-  collectibles = [];
-  obstacles = [];
-  player.isDead = false;
-  player.state = 0;
-  player.y = CANVAS_HEIGHT - player.height - 40;
   player.x = 100;
+  player.state = 0;
+  player.dy = 0;
+  player.y = CANVAS_HEIGHT - player.height - 40;
+  player.isDead = false;
+  obstacles = [];
+  collectibles = [];
   tryAgainBtn.classList.add("hidden");
+  letsShopBtn.classList.add("hidden");
   gameOverlay.classList.add("hidden");
-  gameScoreDisplay.style.visibility = "visible";
   mobileControls.classList.remove("hidden");
+  gameScoreDisplay.style.visibility = "visible";
+  sounds.music.currentTime = 0;
+  if (!isMuted) sounds.music.play();
   requestAnimationFrame(gameLoop);
 }
 
+// Game loop
 function gameLoop() {
-  if (gameOver || isPaused) {
-    if (gameOver) drawGameOver();
-    return;
-  }
+  if (gameOver || isPaused) return;
 
   ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
   drawBackground();
   player.update();
   player.draw();
 
-  if (frameCount % 140 === 0) spawnCollectible();
+  if (frameCount % 120 === 0) spawnCollectible();
   if (frameCount % 220 === 0) spawnObstacle();
 
-  collectibles.forEach((c, i) => {
+  for (let i = collectibles.length - 1; i >= 0; i--) {
+    const c = collectibles[i];
     c.update();
     c.draw();
     if (c.collides(player)) {
@@ -254,23 +235,27 @@ function gameLoop() {
       collectibles.splice(i, 1);
       if (!isMuted) sounds.collect.play();
     }
-  });
+  }
 
-  obstacles.forEach((o, i) => {
+  for (let i = obstacles.length - 1; i >= 0; i--) {
+    const o = obstacles[i];
     o.update();
     o.draw();
-    if (o.collides(player)) {
+    if (o.collides(player) && !player.isDead) {
       player.die();
       gameOver = true;
       highScore = Math.max(highScore, score);
       localStorage.setItem("auragnalHighScore", highScore);
+      setTimeout(() => {
+        drawGameOver();
+      }, 500);
     }
-  });
+  }
 
   drawScore();
   frameCount++;
 
-  if (score % 50 === 0 && score !== 0 && frameCount % 5 === 0 && !fallingObstacles) {
+  if (score !== 0 && score % 50 === 0 && !fallingObstacles) {
     gameSpeed += 0.1;
     spawnFallingObstacles();
   }
@@ -278,30 +263,20 @@ function gameLoop() {
   requestAnimationFrame(gameLoop);
 }
 
-// Buttons
+// Button events
 startBtn.onclick = () => {
+  gameStarted = true;
   startBtn.style.display = "none";
   letsShopBtn.classList.add("hidden");
-  gameOverlay.classList.add("hidden");
-  gameScoreDisplay.style.visibility = "visible";
-  mobileControls.classList.remove("hidden");
-  if (!isMuted) sounds.music.play();
   resetGame();
 };
 
 tryAgainBtn.onclick = () => {
-  startBtn.style.display = "none";
-  letsShopBtn.classList.add("hidden");
-  mobileControls.classList.remove("hidden");
-  gameScoreDisplay.style.visibility = "visible";
-  if (!isMuted) sounds.music.play();
   resetGame();
 };
 
-pauseBtn.onclick = () => {
-  isPaused = !isPaused;
-  pauseBtn.textContent = isPaused ? "▶️" : "⏸️";
-  if (!isPaused) requestAnimationFrame(gameLoop);
+letsShopBtn.onclick = () => {
+  window.location.href = "https://auragnal.com";
 };
 
 muteBtn.onclick = () => {
@@ -310,15 +285,40 @@ muteBtn.onclick = () => {
   sounds.music.volume = isMuted ? 0 : 1;
 };
 
-letsShopBtn.onclick = () => window.location.href = "https://auragnal.com";
+pauseBtn.onclick = () => {
+  isPaused = !isPaused;
+  pauseBtn.textContent = isPaused ? "▶️" : "⏸️";
+  if (!isPaused) requestAnimationFrame(gameLoop);
+};
 
-mobileUp.onclick = () => player.jump();
-mobileLeft.onclick = () => player.moveLeft();
-mobileRight.onclick = () => player.moveRight();
-
+// Controls
+const keys = {};
 window.addEventListener("keydown", (e) => {
-  if (["ArrowUp", "Space", "KeyW"].includes(e.code)) player.jump();
-  if (["ArrowLeft", "KeyA"].includes(e.code)) player.moveLeft();
-  if (["ArrowRight", "KeyD"].includes(e.code)) player.moveRight();
-  if (e.code === "Enter" && gameOver) tryAgainBtn.click();
+  keys[e.code] = true;
+  if (e.code === "ArrowUp" || e.code === "Space") player.jump();
+  if (e.code === "Enter" && gameOver) resetGame();
+});
+window.addEventListener("keyup", (e) => {
+  keys[e.code] = false;
+});
+
+function checkKeysHeld() {
+  if (keys["ArrowLeft"]) player.moveLeft();
+  if (keys["ArrowRight"]) player.moveRight();
+  requestAnimationFrame(checkKeysHeld);
+}
+checkKeysHeld();
+
+// Mobile multi-touch
+mobileUp.addEventListener("touchstart", e => {
+  e.preventDefault();
+  player.jump();
+});
+mobileLeft.addEventListener("touchstart", e => {
+  e.preventDefault();
+  player.moveLeft();
+});
+mobileRight.addEventListener("touchstart", e => {
+  e.preventDefault();
+  player.moveRight();
 });
