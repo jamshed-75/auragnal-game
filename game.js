@@ -80,13 +80,13 @@ class GameObject {
 
 class Player {
   constructor() {
-    this.scale = 0.12;
+    this.scale = 0.10;
     this.x = 100;
     this.y = CANVAS_HEIGHT - 380 * this.scale - 40;
     this.dy = 0;
     this.width = 405 * this.scale;
     this.height = 380 * this.scale;
-    this.jumpPower = -20;
+    this.jumpPower = -22;
     this.grounded = true;
     this.isDead = false;
     this.state = 0;
