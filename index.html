@@ -18,32 +18,32 @@
 
   <div id="game-frame">
     <canvas id="gameCanvas"></canvas>
-    <div id="gameOverlay">
-      <p>Welcome to AURAGNAL Mystery Shopper — Collect, Dodge, Survive in Style.</p>
-      <div id="controlsInfo">
-        <p><strong>Controls:</strong></p>
-        <p>⬅️ Left / A — Move Left</p>
-        <p>➡️ Right / D — Move Right</p>
-        <p>⬆️ Up / W / Space — Jump</p>
-        <p>Enter — Restart after Game Over</p>
-      </div>
+
+    <!-- Overlay message inside game box -->
+    <div id="gameOverlay" class="overlay">
+      <p>Welcome to <strong>AURAGNAL Mystery Shopper</strong> — Collect, Dodge, Survive in Style.</p>
+      <p class="controls-info">
+        Controls: ⬆️ Jump, ⬅️ Left, ➡️ Right<br />
+        (Keyboard: ↑ ← → or W A D — Mobile: Tap Buttons)
+      </p>
     </div>
+
     <button id="tryAgainBtn" class="hidden">Try Again</button>
   </div>
 
   <div id="button-container">
     <button id="startBtn">Start Game</button>
-    <button id="lets-shop">Let's Shop Instead</button>
+    <button id="lets-shop" class="hidden">Let's Shop Instead</button>
   </div>
 
-  <!-- Mobile Controls -->
+  <!-- Mobile Controls (⬆️⬅️➡️ layout) -->
   <div id="mobile-controls" class="hidden">
     <div class="up-row">
-      <button id="mobile-up" class="arrow-btn">▲</button>
+      <button id="mobile-up" class="arrow-btn">↑</button>
     </div>
     <div class="left-right-row">
-      <button id="mobile-left" class="arrow-btn">◀</button>
-      <button id="mobile-right" class="arrow-btn">▶</button>
+      <button id="mobile-left" class="arrow-btn">←</button>
+      <button id="mobile-right" class="arrow-btn">→</button>
     </div>
   </div>
 
