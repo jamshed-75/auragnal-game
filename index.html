@@ -11,29 +11,38 @@
 <body>
   <h1 id="game-title">Mystery Shopper</h1>
 
+  <!-- Mute & Pause -->
   <div id="mute-container">
     <button id="muteBtn">🔊</button>
     <button id="pauseBtn">⏸️</button>
   </div>
 
+  <!-- Game Box -->
   <div id="game-frame">
     <canvas id="gameCanvas"></canvas>
-    <button id="tryAgainBtn" class="hidden">Try Again</button>
 
-    <!-- Overlay before game starts -->
-    <div id="game-overlay">
-      <p>Welcome to AURAGNAL Mystery Shopper — Collect, Dodge, Survive in Style.</p>
-      <p id="control-instructions">
-        Controls:<br />
-        Desktop: ⬅️ Move Left &nbsp;&nbsp; ⬆️ Jump &nbsp;&nbsp; ➡️ Move Right<br />
-        Mobile: Use the buttons below
+    <!-- Game Overlay -->
+    <div id="gameOverlay" class="overlay">
+      <p class="intro-text">Welcome to <strong>AURAGNAL Mystery Shopper</strong><br />Collect, Dodge, Survive in Style.</p>
+      <p class="controls-info">Controls:<br />
+        Desktop – ⬅️ ⬆️ ➡️ or A W D / Arrow keys<br />
+        Mobile – Use on-screen buttons
       </p>
     </div>
+
+    <!-- Score Display -->
+    <div id="gameScoreDisplay">
+      <span id="scoreText">Score: 0</span> |
+      <span id="highScoreText">High Score: 0</span>
+    </div>
+
+    <button id="tryAgainBtn" class="hidden">Try Again</button>
   </div>
 
+  <!-- Main Menu -->
   <div id="button-container">
     <button id="startBtn">Start Game</button>
-    <button id="lets-shop">Let's Shop Instead</button>
+    <button id="lets-shop">Let’s Shop Instead</button>
   </div>
 
   <!-- Mobile Controls -->
